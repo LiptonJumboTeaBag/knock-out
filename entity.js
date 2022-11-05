@@ -6,6 +6,7 @@ const {
 
 const shapes = {
     rectangle: new defs.Cube(),
+    triangle: new defs.Triangle(),
 };
 
 const phong = new defs.Phong_Shader();
@@ -81,7 +82,17 @@ export class Table extends Entity {
 }
 
 export class Obstacle extends Entity {
+    constructor(material = materials.plastic, shape = shapes.triangle, scale_x = 1, scale_y = 1, scale_z = 1){
+        super();
+        this.position = this.position
+            .times(Mat4.scale(scale_x,scale_y,scale_z));
+        this.material = material;
+        this.shape = shape;
+    }
 
+    draw(context, program_state){
+        this.shape.draw(context, program_state, this.position, this.material);
+    }
 }
 
 export class AimLine extends Entity {
