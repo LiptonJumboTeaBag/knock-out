@@ -34,7 +34,7 @@ Object.assign(defs,
     {Surfaces_Demo},
     {Text_Demo},
     {Transforms_Sandbox},
-    {Main: KnockOut}
+    {KnockOut}
 );
 
 // ******************** End extra step
