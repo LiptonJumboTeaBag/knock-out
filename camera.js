@@ -15,4 +15,10 @@ export class Camera {
 
     update() {
     }
+
+    // places camera at (0, y_pos, 0) looking at the origin, the top_vec is vec3 top vector
+    birdEye(y_pos, top_vec){
+        this.camera_matrix = Mat4.look_at(vec3(0, y_pos, 0), vec3(0,0,0), top_vec)
+        return this.camera_matrix
+    }
 }

@@ -10,10 +10,11 @@ const {
  */
 export class Entity {
     constructor() {
-        this.position = null;
+        this.position = Mat4.identity();
         this.rotation = null;
         this.velocity = null;
         this.collider = null;
+        this.material = null;
 
         this.is_static = false; // If true, the entity will not move.
     }
@@ -41,6 +42,7 @@ export class Entity {
     draw(context, program_state) {
 
     }
+
 }
 
 export class Ball extends Entity {
@@ -48,7 +50,17 @@ export class Ball extends Entity {
 }
 
 export class Table extends Entity {
+    // place table at origin with scale_x, scale_y, scale_z with the specified materal
+    constructor(material, scale_x= 2.5, scale_y = 0.5, scale_z=5){
+        super();
+        this.position = this.position
+            .times(Mat4.scale(scale_x,scale_y,scale_z));
+        this.material = material;
+    }
 
+    draw(context, program_state){
+        new defs.Cube().draw(context, program_state, this.position, this.material);
+    }
 }
 
 export class Obstacle extends Entity {
