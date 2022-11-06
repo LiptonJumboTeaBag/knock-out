@@ -17,7 +17,7 @@ export class Camera {
     }
 
     // places camera at (0, y_pos, 0) looking at the origin, the top_vec is vec3 top vector
-    birdEye(y_pos, top_vec){
+    birdEye(y_pos = 10, top_vec = vec3(1,0,0)){
         this.camera_matrix = Mat4.look_at(vec3(0, y_pos, 0), vec3(0,0,0), top_vec);
         return this.camera_matrix;
     }
@@ -28,7 +28,7 @@ export class Camera {
     }
 
     RightPerspective(){
-        this.camera_matrix = Mat4.look_at(vec3(-4, 10, 0), vec3(0,0,0), vec3(0,1,0));
+        this.camera_matrix = Mat4.look_at(vec3(0, 10, -9), vec3(0,0,0), vec3(0,1,0));
         return this.camera_matrix;
     }
 }

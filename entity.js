@@ -4,11 +4,6 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
 
-const shapes = {
-    rectangle: new defs.Cube(),
-    triangle: new defs.Triangle(),
-};
-
 const phong = new defs.Phong_Shader();
 
 const materials = {
@@ -20,6 +15,40 @@ const materials = {
     table: new Material(phong,
         {ambient: 1, diffusivity: 0, specularity: 0, color: color(0.2, .5, 1, 1)})
 
+};
+
+class TriangularPrism extends Shape {
+    constructor() {
+        super("position", "normal",);
+        // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
+        this.arrays.position = Vector3.cast(
+            [-1, -1, -1], [0, -1, 1], [1, -1, -1], 
+            [-1, -1, -1], [-1, 1, -1], [0, 1, 1], [0, -1, 1],
+            [0, -1, 1], [1, -1, -1], [1, 1, -1], [0, 1, 1],
+            [-1, 1, -1], [1, 1, -1], [1, -1, -1], [-1, -1, -1],
+            [-1, 1, -1], [0, 1, 1], [1, 1, -1], 
+            );
+        this.arrays.normal = Vector3.cast(
+            [0,-5, 0], [0,-5, 0], [0,-5, 0],
+            [-2, 0, 1],[-2, 0, 1],[-2, 0, 1],[-2, 0, 1],
+            [2, 0, 1],[2, 0, 1],[2, 0, 1],[2, 0, 1],
+            [0, 0, -5],[0, 0, -5],[0, 0, -5],[0, 0, -5],
+            [0, 5, 0],[0, 5, 0],[0, 5, 0],
+            );
+        // Arrange the vertices into a square shape in texture space too:
+        this.indices.push(
+            0, 2 ,1, 
+            3, 5, 4, 3, 6, 5,
+            7, 8, 9, 7, 9, 10,
+            11, 12, 13, 11, 13, 14,
+            15, 16, 17,
+            );
+    }
+}
+
+const shapes = {
+    rectangle: new defs.Cube(),
+    triangular_prism: new TriangularPrism(),
 };
 /**
  * Entity is the base class for all 3D objects in the game.
@@ -82,10 +111,11 @@ export class Table extends Entity {
 }
 
 export class Obstacle extends Entity {
-    constructor(material = materials.plastic, shape = shapes.triangle, scale_x = 1, scale_y = 1, scale_z = 1){
+    constructor(material = materials.plastic, shape = shapes.triangular_prism, scale_x = 1, scale_y = 1, scale_z = 1){
         super();
         this.position = this.position
-            .times(Mat4.scale(scale_x,scale_y,scale_z));
+            .times(Mat4.scale(scale_x,scale_y,scale_z))
+            .times(Mat4.translation(0, 2, 0));
         this.material = material;
         this.shape = shape;
     }

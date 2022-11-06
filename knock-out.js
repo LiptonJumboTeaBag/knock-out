@@ -19,7 +19,9 @@ export class KnockOut extends Scene {
         this.cameras = [];
         this.ui = [new Scoreboard()];
         this.game = null;
-        this.cameras = [new Camera()]
+        this.view = 0;
+        this.currentView = null;
+        this.cameras = [new Camera()];
         this.entities = {
             table: new Table(),
             obstacle1: new Obstacle(),
@@ -32,6 +34,11 @@ export class KnockOut extends Scene {
         this.live_string(box => {
             box.textContent = `Frame rate: ${this.frame_rate.toFixed(2)}`;
         });
+
+        this.key_triggered_button("Change Perspective", ["v"], function () {
+            this.view += 1;
+            this.view %= 3;
+        });
     }
 
     /**
@@ -41,12 +48,23 @@ export class KnockOut extends Scene {
         // Setup control panel
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+        }
 
-            program_state.set_camera(
-                //this.cameras[0].birdEye(10, vec3(1,0,0)));
-                //this.cameras[0].LeftPerspective());
-                this.cameras[0].RightPerspective()
-            );
+        // Switch camera view
+        if (this.view != this.currentView) {
+            this.currentView = this.view;
+            switch(this.view) {
+                case 0:
+                    this.cameras[0].LeftPerspective();
+                    break;
+                case 1:
+                    this.cameras[0].RightPerspective();
+                    break;
+                case 2:
+                    this.cameras[0].birdEye();
+                    break;
+            }
+            program_state.set_camera(this.cameras[0].camera_matrix);
         }
 
         // Calculate time
