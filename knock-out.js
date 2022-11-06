@@ -18,16 +18,21 @@ export class KnockOut extends Scene {
         this.colliders = [];
         this.cameras = [];
         this.ui = [];
-        this.game = null;        
-        this.cameras = [new Camera()]
+        this.game = null;      
+        this.view = 0;
+        this.currentView = null;  
+        this.cameras = [new Camera()];
         this.entities = {
             table: new Table(),
             obstacle1: new Obstacle(),
         };
-
     }
 
     make_control_panel() {
+        this.key_triggered_button("Change Perspective", ["v"], function () {
+            this.view += 1;
+            this.view %= 3;
+        });
     }
 
     /**
@@ -37,12 +42,23 @@ export class KnockOut extends Scene {
 
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-
-            program_state.set_camera(
-            //this.cameras[0].birdEye(10, vec3(1,0,0)));  
-            //this.cameras[0].LeftPerspective());
-            this.cameras[0].RightPerspective());
         }
+        if (this.view != this.currentView) {
+            this.currentView = this.view;
+            switch(this.view) {
+                case 0:
+                    this.cameras[0].LeftPerspective();
+                    break;
+                case 1:
+                    this.cameras[0].RightPerspective();
+                    break;
+                case 2:
+                    this.cameras[0].birdEye();
+                    break;
+            }
+            program_state.set_camera(this.cameras[0].camera_matrix);
+        }
+       
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
         
