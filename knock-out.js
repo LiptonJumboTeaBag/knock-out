@@ -15,18 +15,23 @@ export class KnockOut extends Scene {
     constructor() {
         super();
 
-        this.colliders = [];
-        this.cameras = [];
-        this.ui = [new Scoreboard()];
-        this.game = null;
-        this.view = 0;
-        this.currentView = null;
-        this.cameras = [new Camera()];
+        // Objects
         this.entities = {
             table: new Table(),
             obstacle1: new Obstacle(),
         };
+        this.colliders = [];
+        this.ui = [new Scoreboard()];
 
+        // Game control
+        this.game = null;
+
+        // Camera and view
+        this.view = 0;
+        this.currentView = null;
+        this.cameras = [new Camera()];
+
+        // Frame rate
         this.frame_rate = 0;
     }
 
@@ -34,6 +39,7 @@ export class KnockOut extends Scene {
         this.live_string(box => {
             box.textContent = `Frame rate: ${this.frame_rate.toFixed(2)}`;
         });
+        this.new_line();
 
         this.key_triggered_button("Change Perspective", ["v"], function () {
             this.view += 1;
@@ -51,9 +57,9 @@ export class KnockOut extends Scene {
         }
 
         // Switch camera view
-        if (this.view != this.currentView) {
+        if (this.view !== this.currentView) {
             this.currentView = this.view;
-            switch(this.view) {
+            switch (this.view) {
                 case 0:
                     this.cameras[0].LeftPerspective();
                     break;
