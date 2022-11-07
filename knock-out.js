@@ -81,23 +81,24 @@ export class KnockOut extends Scene {
 
         // Setup projection matrix
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 100);
+            Math.PI / 4, context.width / context.height, 1, 10000);
 
         // Setup light
         const light_position = vec4(0, 0, 0, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
-
-        // Update and draw all entities
-        for (const i in this.entities) {
-            // console.log(i)
-            this.entities[i].draw(context, program_state);
-        }
+        const top_light_position = vec4(0, 10, 0, 1);
+        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10000), new Light(top_light_position, color(1, 1, 1, 1), 10000)];
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
         // console.log(program_state.camera_inverse.toString())
         for (const i in this.ui) {
             this.ui[i].display(context, program_state);
+        }
+
+        // Update and draw all entities
+        for (const i in this.entities) {
+            // console.log(i)
+            this.entities[i].draw(context, program_state);
         }
     }
 }

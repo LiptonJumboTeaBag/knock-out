@@ -12,18 +12,29 @@ export class UI {
     static camera_transform = Mat4.identity();
     static camera_inverse = Mat4.identity();
 
-    constructor(cv_width, cv_height) {
+    constructor(cv_dim) {
         this.projection_inverse = Mat4.identity();
 
-        this.scratchpad = document.createElement('canvas');
-        this.scratchpad_context = this.scratchpad.getContext('2d');
-        this.scratchpad.width = cv_width;
-        this.scratchpad.height = cv_height;
-        this.texture = new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        this.scratchpads = [];
+        this.scratchpad_contexts = [];
+        this.scratchpad_textures = [];
+        this.scratchpads_materials = [];
 
-        this.materials = {
-            sub_scene: new Material(new defs.Fake_Bump_Map(1), {ambient: 1, texture: this.texture}),
-        };
+        for (let i = 0; i < cv_dim.length; i++) {
+            const [width, height] = cv_dim[i];
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            this.scratchpads.push(canvas);
+            this.scratchpad_contexts.push(canvas.getContext("2d"));
+            this.scratchpad_textures.push(new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"));
+            this.scratchpads_materials.push(new Material(new defs.Fake_Bump_Map(1), {
+                ambient: 1,
+                texture: this.scratchpad_textures[i]
+            }));
+        }
     }
 
     /**
@@ -62,15 +73,18 @@ export class UI {
 
 export class Scoreboard extends UI {
     constructor() {
-        super(256, 256);
+        super([[256, 256], [256, 256]]);
+
+        this.turn = 0;
 
         this.shapes = {
             square: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(25, 25),
             text: new Text_Line(20),
+            cylinder: new defs.Capped_Cylinder(25, 25),
         };
 
-        Object.assign(this.materials, {
+        this.materials = {
             background: new Material(new defs.Phong_Shader(), {
                 ambient: 1,
                 diffusivity: 0,
@@ -89,7 +103,7 @@ export class Scoreboard extends UI {
                 specularity: 0,
                 color: color(25 / 256, 109 / 256, 227 / 256, 1)
             }),
-        })
+        }
 
         const texture = new defs.Textured_Phong(1);
         this.text_image = new Material(texture, {
@@ -98,35 +112,83 @@ export class Scoreboard extends UI {
         });
     }
 
+    /**
+     * Set the current player's turn.
+     * @param p 0 for player 1, 1 for player 2.
+     */
+    set player(p) {
+        this.turn = p;
+    }
+
     display(context, program_state) {
         super.display(context, program_state);
 
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         const aspect_ratio = context.width / context.height;
 
+        /* Draw sub-scenes */
+        const cam_matrix_backup = program_state.camera_inverse;
+
+        let cam_x = !this.turn ? 3 * Math.cos(t) : 0;
+        let cam_y = !this.turn ? 3 * Math.sin(t) : 3;
+        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
+
+        // Player 1 object
+        let obj_tr = Mat4.identity();
+        obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
+        // let angle = t * Math.PI / 2.5;
+        // obj_tr.post_multiply(Mat4.translation(0, 0, 0));
+        // obj_tr.post_multiply(Mat4.rotation(angle, 0, 7/5, -7/5));
+        this.shapes.cylinder.draw(context, program_state, obj_tr, this.materials.p1_obj);
+        this.scratchpad_contexts[0].drawImage(context.canvas, 0, 0, 256, 256 / aspect_ratio);
+        this.scratchpad_textures[0].image.src = this.scratchpads[0].toDataURL("image/png");
+        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
+
+        // Player 2 object
+        cam_x = this.turn ? 3 * Math.cos(t) : 0;
+        cam_y = this.turn ? 3 * Math.sin(t) : 3;
+        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
+
+        obj_tr = Mat4.identity();
+        obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
+        this.shapes.cylinder.draw(context, program_state, obj_tr, this.materials.p2_obj);
+        this.scratchpad_contexts[1].drawImage(context.canvas, 0, 0, 256, 256 / aspect_ratio);
+        this.scratchpad_textures[1].image.src = this.scratchpads[1].toDataURL("image/png");
+
+        // Cleanup
+        if (this.skip) {
+            this.scratchpad_textures[0].copy_onto_graphics_card(context.context, false);
+            this.scratchpad_textures[1].copy_onto_graphics_card(context.context, false);
+        }
+        this.skip = true;
+        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
+        program_state.set_camera(cam_matrix_backup);
+
+        /* Draw main scene */
         const bg_transform = super.get_transform(0, 0.9, 0.25, 0.1);
         bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         this.shapes.square.draw(context, program_state, bg_transform, this.materials.background);
 
-        let t = "Player 1's Turn"
-        const text_transform = super.get_transform(t.length / 2 * -0.028, 0.89, 0.02, 0.05);
-        this.shapes.text.set_string(t, context.context);
+        let l = `Player ${this.turn ? '0' : '1'}'s Turn`
+        const text_transform = super.get_transform(l.length / 2 * -0.028, 0.89, 0.02, 0.05);
+        this.shapes.text.set_string(l, context.context);
         this.shapes.text.draw(context, program_state, text_transform, this.text_image);
 
         // Draw player avatars
-        const avatar_width = 0.05;
+        const avatar_width = 0.1;
         const avatar_height = avatar_width * aspect_ratio;
         const p1_avt_transform = super.get_transform(
-            -.95 + avatar_width,
+            -1 + avatar_width,
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.circle.draw(context, program_state, p1_avt_transform, this.materials.p1_obj);
+        this.shapes.square.draw(context, program_state, p1_avt_transform, this.scratchpads_materials[0]);
         const p2_avt_transform = super.get_transform(
-            .95 - avatar_width,
+            1 - avatar_width,
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.circle.draw(context, program_state, p2_avt_transform, this.materials.p2_obj);
+        this.shapes.square.draw(context, program_state, p2_avt_transform, this.scratchpads_materials[1]);
 
         // Draw background for player texts
         const label_text_size = 0.017;
