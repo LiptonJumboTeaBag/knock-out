@@ -1,4 +1,6 @@
 import {defs, tiny} from './tiny-graphics/common.js';
+import {roboto} from "./assets/fonts/roboto.js";
+import {roboto_bold} from "./assets/fonts/roboto-bold.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -80,7 +82,7 @@ export class Scoreboard extends UI {
         this.shapes = {
             square: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(25, 25),
-            text: new Text_Line(20),
+            text: new Text_Shape(roboto_bold),
             cylinder: new defs.Capped_Cylinder(25, 25),
         };
 
@@ -103,13 +105,11 @@ export class Scoreboard extends UI {
                 specularity: 0,
                 color: color(25 / 256, 109 / 256, 227 / 256, 1)
             }),
+            text_image: new Material(new defs.Textured_Phong(1), {
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture("assets/fonts/roboto-bold.png")
+            }),
         }
-
-        const texture = new defs.Textured_Phong(1);
-        this.text_image = new Material(texture, {
-            ambient: 1, diffusivity: 0, specularity: 0,
-            texture: new Texture("assets/text.png")
-        });
     }
 
     /**
@@ -164,15 +164,16 @@ export class Scoreboard extends UI {
         context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
         program_state.set_camera(cam_matrix_backup);
 
+
         /* Draw main scene */
         const bg_transform = super.get_transform(0, 0.9, 0.25, 0.1);
         bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         this.shapes.square.draw(context, program_state, bg_transform, this.materials.background);
 
-        let l = `Player ${this.turn ? '0' : '1'}'s Turn`
-        const text_transform = super.get_transform(l.length / 2 * -0.028, 0.89, 0.02, 0.05);
+        let l = `Player ${this.turn ? '0' : '1'}'s Turn`;
+        const text_transform = super.get_transform(-0.2, .97, 0.002, 0.002 * aspect_ratio);
         this.shapes.text.set_string(l, context.context);
-        this.shapes.text.draw(context, program_state, text_transform, this.text_image);
+        this.shapes.text.draw(context, program_state, text_transform, this.materials.text_image.override({color: color(1, 0.84, 0, 1)}));
 
         // Draw player avatars
         const avatar_width = 0.1;
@@ -211,61 +212,125 @@ export class Scoreboard extends UI {
 
         // Draw player labels texts ("Player 1" and "Player 2")
         const p1_label_transform = super.get_transform(
-            -.96, .7, label_text_size * 0.7, label_text_size * aspect_ratio
+            -.96, .735, label_text_size / 15, label_text_size / 15 * aspect_ratio
         );
         this.shapes.text.set_string("Player 1", context.context);
-        this.shapes.text.draw(context, program_state, p1_label_transform, this.text_image);
+        this.shapes.text.draw(context, program_state, p1_label_transform, this.materials.text_image.override({color: color(1, 0, 0, 1)}));
         const p2_label_transform = super.get_transform(
-            .84,
-            .7,
-            label_text_size * 0.7,
-            label_text_size * aspect_ratio
+            .84, .735, label_text_size / 15, label_text_size / 15 * aspect_ratio
         );
         this.shapes.text.set_string("Player 2", context.context);
-        this.shapes.text.draw(context, program_state, p2_label_transform, this.text_image);
+        this.shapes.text.draw(context, program_state, p2_label_transform, this.materials.text_image.override({color: color(0, 0, 1, 1)}));
     }
 }
 
-// noinspection DuplicatedCode
-export class Text_Line extends Shape {
-    // **Text_Line** embeds text in the 3D world, using a crude texture
-    // method.  This Shape is made of a horizontal arrangement of quads.
-    // Each is textured over with images of ASCII characters, spelling
-    // out a string.  Usage:  Instantiate the Shape with the desired
-    // character line width.  Then assign it a single-line string by calling
-    // set_string("your string") on it. Draw the shape on a material
-    // with full ambient weight, and text.png assigned as its texture
-    // file.  For multi-line strings, repeat this process and draw with
-    // a different matrix.
-    constructor(max_size) {
+export class Text_Shape_ {
+    constructor(desc, texture) {
+        this.shapes = {
+            square: new defs.Square(),
+        };
+
+        this.materials = {
+            text: new Material(texture, {
+                ambient: 1, diffusivity: 0, specularity: 0,
+                texture: new Texture(texture)
+            })
+        };
+
+        // Load bitmap font
+        this.desc = desc;
+        this.width = desc.common.scaleW;
+        this.height = desc.common.scaleH;
+    }
+}
+
+class Text_Shape extends Shape {
+    constructor(desc = roboto_bold) {
         super("position", "normal", "texture_coord");
-        this.max_size = max_size;
-        const object_transform = Mat4.identity();
-        for (let i = 0; i < max_size; i++) {                                       // Each quad is a separate Square instance:
-            defs.Square.insert_transformed_copy_into(this, [], object_transform);
-            object_transform.post_multiply(Mat4.translation(1.5, 0, 0));
-        }
+
+        this.string = "";
+
+        // Load sdf font description
+        this.desc = desc;
+        this.width = desc.common.scaleW;
+        this.height = desc.common.scaleH;
     }
 
-    set_string(line, context) {           // set_string():  Call this to overwrite the texture coordinates buffer with new
-        // values per quad, which enclose each of the string's characters.
+    set_string(string, context) {
+        if (string === this.string) return;
+
+        this.arrays.position = [];
+        this.arrays.normal = [];
         this.arrays.texture_coord = [];
-        for (let i = 0; i < this.max_size; i++) {
-            const row = Math.floor((i < line.length ? line.charCodeAt(i) : ' '.charCodeAt()) / 16),
-                col = Math.floor((i < line.length ? line.charCodeAt(i) : ' '.charCodeAt()) % 16);
+        this.indices = [];
 
-            const skip = 3, size = 32, sizefloor = size - skip;
-            const dim = size * 16,
-                left = (col * size + skip) / dim, top = (row * size + skip) / dim,
-                right = (col * size + sizefloor) / dim, bottom = (row * size + sizefloor + 5) / dim;
+        this.string = string;
+        let last_id = null;
+        let last_x = 0;
 
+        for (const ch of string) {
+            const desc = this.get_char_desc(ch);
+            const tc_backup = this.arrays.texture_coord.length;
+
+            let id = desc.id,
+                x = desc.x,
+                y = desc.y,
+                width = desc.width,
+                height = desc.height,
+                xoffset = desc.xoffset,
+                yoffset = desc.yoffset,
+                xadvance = desc.xadvance;
+
+            if (last_id !== null) {
+                // Apply kerning
+                xoffset += this.get_kerning(last_id, id);
+            }
+            last_id = id;
+
+            // Construct transformation matrix of current character
+            const transform = Mat4.identity();
+            transform.post_multiply(Mat4.scale(width / 2, height / 2, 1));
+            transform.post_multiply(Mat4.translation(1, -1, 0));
+            transform.post_multiply(Mat4.translation((last_x + xoffset) / width * 2, -yoffset / height * 2, 0));
+            defs.Square.insert_transformed_copy_into(this, [], transform);
+
+            console.log(`${ch}: ${last_x}`);
+            console.log(desc);
+
+            // Record x position of next character
+            last_x += xadvance + xoffset;
+
+            // Construct texture coordinates
+            const left = x / this.width, right = (x + width) / this.width;
+            const top = y / this.height, bottom = (y + height) / this.height;
+            this.arrays.texture_coord = this.arrays.texture_coord.slice(0, tc_backup)
             this.arrays.texture_coord.push(...Vector.cast([left, 1 - bottom], [right, 1 - bottom],
                 [left, 1 - top], [right, 1 - top]));
         }
+
         if (!this.existing) {
             this.copy_onto_graphics_card(context);
             this.existing = true;
-        } else
+        } else {
             this.copy_onto_graphics_card(context, ["texture_coord"], false);
+        }
+    }
+
+    get_char_desc(ch) {
+        const res = this.desc.chars.find((c) => c.char === ch);
+        // const res = this.desc.characters[ch];
+        if (res === undefined) {
+            return this.get_char_desc('?');
+        }
+        return res;
+    }
+
+    get_kerning(id1, id2) {
+        // return 0;
+        const res = this.desc.kernings.find((k) => k.first === id1 && k.second === id2);
+        if (res === undefined) {
+            return 0;
+        }
+        return res.amount;
     }
 }
