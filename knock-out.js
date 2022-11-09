@@ -89,7 +89,6 @@ export class KnockOut extends Scene {
         // Setup projection matrix
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
-        console.log(program_state.projection_transform);
 
         if (this.orthographic) {
             const right = -10;
