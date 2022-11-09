@@ -1,5 +1,5 @@
 import {defs, tiny} from './tiny-graphics/common.js';
-import {SceneDrawer, Scene2Texture} from "./scene2texture.js";
+import {Scene2Texture, SceneDrawer} from "./scene2texture.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -32,6 +32,13 @@ export class UI {
      */
     static set player(p) {
         UI.turn = p;
+    }
+
+    /**
+     * Switch to the next player's turn.
+     */
+    static switch_player() {
+        UI.turn = 1 - UI.turn;
     }
 
     /**
@@ -86,8 +93,9 @@ export class TopBanner extends UI {
             }),
         };
 
-        this.text = new TextLine("", "roboto-regular");
-        this.text.set_position(-0.2, .96, 0.0015);
+        // orange color
+        this.text = new TextLine('Drop-out!', "nasalization", hex_color("#FFA500"));
+        this.text.set_position(0, .96, 0.0016);
     }
 
     display(context, program_state) {
@@ -98,7 +106,7 @@ export class TopBanner extends UI {
         bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         this.shapes.square.draw(context, program_state, bg_transform, this.materials.background);
 
-        this.text.text = `Player ${UI.player === 0 ? '1' : '2'}'s Turn`;
+        // this.text.text = `Player ${UI.player === 0 ? '1' : '2'}'s Turn`;
         this.text.display(context, program_state);
     }
 }
@@ -112,13 +120,12 @@ export class PlayerAvatar extends UI {
 
         // Player labels
         this.p1_label = new TextLine("Player 1", "roboto-bold", hex_color("#ff4965"));
-        this.p1_label.set_position(-0.95, 0.73, 0.001);
         this.p2_label = new TextLine("Player 2", "roboto-bold", hex_color("#4a90e2"));
-        this.p2_label.set_position(0.85, 0.73, 0.001);
 
         this.shapes = {
             cylinder: new defs.Capped_Cylinder(20, 20),  // Player's chip
             square: new defs.Square(),
+            circle: new defs.Regular_2D_Polygon(25, 25),
         }
 
         this.materials = {
@@ -126,13 +133,13 @@ export class PlayerAvatar extends UI {
             p1_obj: new Material(new defs.Phong_Shader(), {
                 ambient: 1,
                 diffusivity: 0.6,
-                specularity: 0.3,
+                specularity: 0.5,
                 color: color(1, .1, .1, 1)
             }),
             p2_obj: new Material(new defs.Phong_Shader(), {
                 ambient: 1,
                 diffusivity: 0.6,
-                specularity: 0.3,
+                specularity: 0.5,
                 color: color(25 / 256, 109 / 256, 227 / 256, 1)
             }),
             // Background of label texts
@@ -163,12 +170,15 @@ export class PlayerAvatar extends UI {
     display_player(context, program_state, player) {
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
-        let cam_x = UI.player === player ? 3 * Math.cos(t) : 0;
-        let cam_y = UI.player === player ? 3 * Math.sin(t) : 3;
-        let light_x = UI.player === player ? 6 * Math.cos(t) : 0;
-        let light_y = UI.player === player ? 6 * Math.sin(t) : 6;
-        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
-        program_state.lights = [new Light(vec4(light_x, 0, light_y, 1), color(1, 1, 1, 1), 1000)];
+        program_state.projection_transform = Mat4.perspective(
+            Math.PI / 4, context.width / context.height, 1, 10000);
+
+        let cam_x = UI.player === player ? 3 * Math.cos(t * 2) : 0;
+        let cam_y = UI.player === player ? 3 * Math.sin(t * 2) : 3;
+        let light_x = UI.player === player ? 6 * Math.cos(t * 2) : 0;
+        let light_y = UI.player === player ? 6 * Math.sin(t * 2) : 6;
+        program_state.set_camera(Mat4.look_at(vec3(cam_x, 1, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
+        program_state.lights = [new Light(vec4(light_x, 1, light_y, 1), color(1, 1, 1, 1), 1000)];
 
         let obj_tr = Mat4.identity();
         obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
@@ -187,13 +197,13 @@ export class PlayerAvatar extends UI {
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.square.draw(context, program_state, p1_avt_transform, this.p1_avatar_material);
+        this.shapes.circle.draw(context, program_state, p1_avt_transform, this.p1_avatar_material);
         const p2_avt_transform = super.get_transform(
             1 - avatar_width,
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.square.draw(context, program_state, p2_avt_transform, this.p2_avatar_material);
+        this.shapes.circle.draw(context, program_state, p2_avt_transform, this.p2_avatar_material);
 
         // Draw player label background
         const label_text_size = 0.017;
@@ -215,6 +225,8 @@ export class PlayerAvatar extends UI {
         this.shapes.square.draw(context, program_state, p2_label_bg_transform, this.materials.background);
 
         // Draw player labels
+        this.p1_label.set_position(-0.90, 0.73, 0.001);
+        this.p2_label.set_position(0.90, 0.73, 0.001);
         this.p1_label.display(context, program_state);
         this.p2_label.display(context, program_state);
     }
@@ -267,9 +279,12 @@ export class TextLine extends UI {
         // Skip if any of the required data is not loaded or given yet
         if (this.x === undefined || this.y === undefined || this.size === undefined || !this.text_shape) return;
 
-        const aspect_ratio = context.width / context.height;
-        const transform = super.get_transform(this.x, this.y, this.size, this.size * aspect_ratio);
         this.text_shape.set_string(this.text, context.context);
+
+        const aspect_ratio = context.width / context.height;
+        let left_shift = this.text_shape.text_width / 2 * this.size;
+        const transform = super.get_transform(this.x - left_shift, this.y, this.size, this.size * aspect_ratio);
+
         this.text_shape.draw(context, program_state, transform, this.text_texture.override({color: this.color}));
     }
 }
@@ -354,6 +369,7 @@ class TextShape extends Shape {
 
             // Record x position of next character
             last_x += xadvance + xoffset;
+            this.text_width = last_x;
 
             // Construct texture coordinates
             const left = x / this.texture_width, right = (x + width) / this.texture_width;
@@ -362,18 +378,19 @@ class TextShape extends Shape {
                 [left, 1 - top], [right, 1 - top]));
         }
 
-        if (!this.existing) {
-            this.copy_onto_graphics_card(context);
-            this.existing = true;
-        } else {
-            this.copy_onto_graphics_card(context, ["texture_coord"], false);
-        }
+        this.copy_onto_graphics_card(context);
+        // if (!this.existing) {
+        //     this.copy_onto_graphics_card(context);
+        //     this.existing = true;
+        // } else {
+        //     this.copy_onto_graphics_card(context, ["texture_coord"], false);
+        // }
     }
 
     /**
      * Get the character description object of a character.
      * @param ch -- The character. If not found, return the description of "?".
-     * @returns {x: number, y: number, width: number, height: number, xoffset: number, yoffset: number, xadvance: number}
+     * @returns {Object} -- The character description object.
      */
     get_char_desc(ch) {
         const res = this.desc.chars.find((c) => c.char === ch);

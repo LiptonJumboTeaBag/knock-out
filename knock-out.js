@@ -53,6 +53,9 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
             this.orthographic = !this.orthographic;
         });
+
+        this.new_line();
+        this.key_triggered_button("Change player", ["c"], () => UI.switch_player());
     }
 
     /**
