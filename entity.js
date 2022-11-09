@@ -161,6 +161,7 @@ export class Table extends Entity {
 
     draw(context, program_state){
         this.shape.draw(context, program_state, this.position, this.material);
+        console.log(this.position);
     }
 }
 
