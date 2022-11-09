@@ -13,8 +13,9 @@ const materials = {
     metal: new Material(phong,
         {ambient: 1, diffusivity: .8, specularity: .8, color: color(.9, .5, .9, 1)}),
     table: new Material(phong,
-        {ambient: 1, diffusivity: 0, specularity: 0, color: color(0.2, .5, 1, 1)})
-
+        {ambient: 0.5, diffusivity: 0.8, specularity: .6, color: color(0.9, .9, .9, 1)}),
+    chip: new Material(phong,
+        {ambient: 0.8, diffusivity: 0.4, specularity: 0.1, color: color(1, 1, 1, 1)}),
 };
 
 class TriangularPrism extends Shape {
@@ -49,6 +50,7 @@ class TriangularPrism extends Shape {
 const shapes = {
     rectangle: new defs.Cube(),
     triangular_prism: new TriangularPrism(),
+    cylinder: new defs.Capped_Cylinder(20, 20),
 };
 /**
  * Entity is the base class for all 3D objects in the game.
@@ -90,17 +92,69 @@ export class Entity {
 
 }
 
-export class Ball extends Entity {
+export class Chip extends Entity {
+    constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_x = 0.5, scale_y = 0.5, scale_z = 0.5) {
+        super();
+        // this.collider = new SphereCollider(this, 1);
+        this.velocity = vec3(0, 0, 0);
+        this.rotation = Mat4.identity();
+        this.scale = Mat4.scale(scale_x,scale_y,scale_z)
+        this.material = material;
+        this.shape = shape;
+        this.player = player;
+        switch (player) {
+            case "player1":
+                this.material = this.material.override({color: color(1, .1, .1, 1)});
+                break;
+            case "player2":
+                this.material = this.material.override({color: color(25 / 256, 109 / 256, 227 / 256, 1)});
+                break;
+        };
+        switch (default_pos) {
+            case 1:
+                this.place(0, 4);
+                break;
+            case 2:
+                this.place(2, 4);
+                break;
+            case 3:
+                this.place(-2, 4);
+                break;
+            case 4:
+                this.place(0, -4);
+                break;
+            case 5:
+                this.place(2, -4);
+                break;
+            case 6:
+                this.place(-2, -4);
+                break;
+        }
+    }
+    place(x, z) {
+        this.position = this.position.times(Mat4.translation(x, 0.75, z));
+    }
+    update(delta_time) {
+        this.position = this.position.times(Mat4.translation(this.velocity.times(delta_time)));
+        this.rotation = this.rotation.times(Mat4.rotation(delta_time, vec3(0, 1, 0)));
+    }
+
+    draw(context, program_state) {
+        const model_transform = this.position
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
+            .times(this.rotation).times(this.scale);
+        this.shape.draw(context, program_state, model_transform, this.material);
+    }
 
 }
 
 export class Table extends Entity {
     // place table at origin with scale_x, scale_y, scale_z with the specified materal\
     // the default shape is a cube
-    constructor(material = materials.table, shape = shapes.rectangle, scale_x = 2.5, scale_y = 0.5, scale_z = 5){
+    constructor(material = materials.table, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
         super();
         this.position = this.position
-            .times(Mat4.scale(scale_x,scale_y,scale_z));
+            .times(Mat4.scale(scale_x,scale_y,scale_z))
         this.material = material;
         this.shape = shape;
     }
@@ -111,15 +165,33 @@ export class Table extends Entity {
 }
 
 export class Obstacle extends Entity {
-    constructor(material = materials.plastic, shape = shapes.triangular_prism, scale_x = 1, scale_y = 1, scale_z = 1){
+    constructor(config=null, material = materials.plastic, shape = shapes.triangular_prism){
         super();
-        this.position = this.position
-            .times(Mat4.scale(scale_x,scale_y,scale_z))
-            .times(Mat4.translation(0, 2, 0));
         this.material = material;
         this.shape = shape;
+        if (config == 'left'){
+            this.left();
+        }
+            
+        else if (config == 'right'){
+            this.right();
+        }
     }
 
+    place_obstacle(x, z, angle, scale_x, scale_z, scale_y){
+        this.position = this.position
+            .times(Mat4.translation(x, 1, z))
+            .times(Mat4.rotation(angle, 0, 1, 0))
+            .times(Mat4.scale(scale_x, scale_y, scale_z));
+    }
+
+    left(){
+        this.place_obstacle(-2.5, 0, Math.PI/2, 2, 1/2, 1/2);
+    }
+
+    right(){
+        this.place_obstacle(2.5, 0, Math.PI*3/2, 2, 1/2, 1/2);
+    }
     draw(context, program_state){
         this.shape.draw(context, program_state, this.position, this.material);
     }
