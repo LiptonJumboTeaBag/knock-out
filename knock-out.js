@@ -1,6 +1,6 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
-import {Obstacle, Table} from "./entity.js";
+import {Chip, Obstacle, Table} from "./entity.js";
 import {Scoreboard, UI} from "./ui.js";
 
 const {
@@ -18,8 +18,11 @@ export class KnockOut extends Scene {
         // Objects
         this.entities = {
             table: new Table(),
-            obstacle1: new Obstacle(),
+            obstacle_left: new Obstacle( "left" ),
+            obstacle_right: new Obstacle( "right" ), 
         };
+        this.player1_chips = [new Chip( "player1", 1), new Chip( "player1", 2 ), new Chip( "player1", 3  ), ];
+        this.player2_chips = [new Chip( "player2", 4 ), new Chip( "player2", 5 ), new Chip( "player2", 6 ), ],
         this.colliders = [];
         this.ui = [new Scoreboard()];
 
@@ -82,7 +85,8 @@ export class KnockOut extends Scene {
         // Setup projection matrix
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
-
+        // program_state.projection_transform = Mat4.orthographic(-500, 500, -500, 500, 1, 10000);
+        
         // Setup light
         const light_position = vec4(0, 0, 0, 1);
         const top_light_position = vec4(0, 10, 0, 1);
@@ -99,6 +103,12 @@ export class KnockOut extends Scene {
         for (const i in this.entities) {
             // console.log(i)
             this.entities[i].draw(context, program_state);
+        }
+        for (const i in this.player1_chips) {
+            this.player1_chips[i].draw(context, program_state);
+        }
+        for (const i in this.player2_chips) {
+            this.player2_chips[i].draw(context, program_state);
         }
     }
 }
