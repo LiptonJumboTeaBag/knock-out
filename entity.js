@@ -58,7 +58,8 @@ const shapes = {
 export class Entity {
     constructor() {
         this.position = Mat4.identity();
-        this.rotation = null;
+        this.rotation = Mat4.identity();
+        this.scale = Mat4.identity();
         this.velocity = null;
         this.collider = null;
         this.material = null;
@@ -87,18 +88,35 @@ export class Entity {
      * Draw the entity as 3D objects.
      */
     draw(context, program_state) {
+        const model_transform = this.position.times(this.rotation).times(this.scale);
+        this.shape.draw(context, program_state, model_transform, this.material);
+    }
 
+    /*
+        * Return the entity's position.
+    */
+    get_position() {
+        let pos = this.position.times(vec4(0, 0, 0, 1));
+        return {x: pos[0], y: pos[1], z: pos[2]};
+    }
+
+
+    // returns positional information of the entity
+    get_info() {
+        return this.get_position();
     }
 
 }
 
 export class Chip extends Entity {
-    constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_x = 0.5, scale_y = 0.5, scale_z = 0.5) {
+    constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
         super();
         // this.collider = new SphereCollider(this, 1);
         this.velocity = vec3(0, 0, 0);
         this.rotation = Mat4.identity();
-        this.scale = Mat4.scale(scale_x,scale_y,scale_z)
+        this.scale = Mat4.scale(scale_r,scale_y, scale_r)
+        this.position = this.position.times(Mat4.translation(0, 
+            scale_y, 0));
         this.material = material;
         this.shape = shape;
         this.player = player;
@@ -132,18 +150,28 @@ export class Chip extends Entity {
         }
     }
     place(x, z) {
-        this.position = this.position.times(Mat4.translation(x, 0.75, z));
+        this.position = this.position.times(Mat4.translation(x, 0, z));
     }
     update(delta_time) {
         this.position = this.position.times(Mat4.translation(this.velocity.times(delta_time)));
         this.rotation = this.rotation.times(Mat4.rotation(delta_time, vec3(0, 1, 0)));
-    }
-
+    }  
+    
     draw(context, program_state) {
         const model_transform = this.position
-            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0))
-            .times(this.rotation).times(this.scale);
+            .times(Mat4.scale(1, 2, 1))
+            .times(this.rotation)
+            .times(this.scale)
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
         this.shape.draw(context, program_state, model_transform, this.material);
+    }
+
+    get_info() {
+        let output = this.get_position();
+        let scale = this.scale.times(vec4(1, 1, 1, 1));
+        output.scale_r = scale[0];
+        output.scale_y = scale[1];
+        return output;
     }
 
 }
@@ -153,49 +181,59 @@ export class Table extends Entity {
     // the default shape is a cube
     constructor(material = materials.table, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
         super();
-        this.position = this.position
-            .times(Mat4.scale(scale_x,scale_y,scale_z))
+        this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.material = material;
+        this.position = this.position.times(Mat4.translation(0, -scale_y, 0));
         this.shape = shape;
     }
 
-    draw(context, program_state){
-        this.shape.draw(context, program_state, this.position, this.material);
-        console.log(this.position);
+    get_info() {
+        let output = this.get_position();
+        let scale = this.scale.times(vec4(1, 1, 1, 1));
+        output.scale_x = scale[0];
+        output.scale_y = scale[1];
+        output.scale_z = scale[2];
+        return output;
     }
 }
 
 export class Obstacle extends Entity {
-    constructor(config=null, material = materials.plastic, shape = shapes.triangular_prism){
+    constructor(config=null, material = materials.plastic, shape = shapes.triangular_prism, scale_x = 2, scale_z = 1/2, scale_y = 1/4){
         super();
         this.material = material;
         this.shape = shape;
+        this.scale = Mat4.scale(scale_x, scale_y, scale_z)
+        this.position = this.position.times(Mat4.translation(0, scale_y, 0));
         if (config == 'left'){
             this.left();
         }
-            
         else if (config == 'right'){
             this.right();
         }
     }
 
-    place_obstacle(x, z, angle, scale_x, scale_z, scale_y){
-        this.position = this.position
-            .times(Mat4.translation(x, 1, z))
-            .times(Mat4.rotation(angle, 0, 1, 0))
-            .times(Mat4.scale(scale_x, scale_y, scale_z));
+    place_obstacle(x, z, angle, ){
+        this.position = this.position.times(Mat4.translation(x, 0, z))
+        this.rotation = Mat4.rotation(angle, 0, 1, 0);
     }
 
     left(){
-        this.place_obstacle(-2.5, 0, Math.PI/2, 2, 1/2, 1/2);
+        this.place_obstacle(-2.5, 0, Math.PI/2);
     }
 
     right(){
-        this.place_obstacle(2.5, 0, Math.PI*3/2, 2, 1/2, 1/2);
+        this.place_obstacle(2.5, 0, Math.PI*3/2);
     }
-    draw(context, program_state){
-        this.shape.draw(context, program_state, this.position, this.material);
+
+    get_info() {
+        let output = this.get_position();
+        let scale = this.scale.times(vec4(1, 1, 1, 1));
+        output.scale_x = scale[0];
+        output.scale_y = scale[1];
+        output.scale_z = scale[2];
+        return output;
     }
+
 }
 
 export class AimLine extends Entity {
