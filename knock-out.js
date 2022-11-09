@@ -32,6 +32,7 @@ export class KnockOut extends Scene {
         // Camera and view
         this.view = 0;
         this.currentView = null;
+        this.orthographic = false;
         this.cameras = [new Camera()];
 
         // Frame rate
@@ -47,6 +48,9 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Change Perspective", ["v"], function () {
             this.view += 1;
             this.view %= 3;
+        });
+        this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
+            this.orthographic = !this.orthographic;
         });
     }
 
@@ -85,13 +89,26 @@ export class KnockOut extends Scene {
         // Setup projection matrix
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
-        // program_state.projection_transform = Mat4.orthographic(-500, 500, -500, 500, 1, 10000);
+        console.log(program_state.projection_transform);
+
+        if (this.orthographic) {
+            const right = -10;
+            const left = 10;
+            const bottom = -6;
+            const top = 6;
+            const near = 1;
+            const far = 100;
+            program_state.projection_transform = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
+                .times(Mat4.translation(-right / (right - left), -top / (top - bottom), -far / (far - near)))
+                .times(Mat4.scale(-3, 3, -3));
+        }
         
-        // Setup light
+        
+            // Setup light
         const light_position = vec4(0, 0, 0, 1);
         const top_light_position = vec4(0, 10, 0, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10000), new Light(top_light_position, color(1, 1, 1, 1), 10000)];
-
+        
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
         // console.log(program_state.camera_inverse.toString())
