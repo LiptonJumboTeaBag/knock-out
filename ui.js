@@ -1,5 +1,4 @@
 import {defs, tiny} from './tiny-graphics/common.js';
-import {roboto} from "./assets/fonts/roboto.js";
 import {roboto_bold} from "./assets/fonts/roboto-bold.js";
 
 const {
