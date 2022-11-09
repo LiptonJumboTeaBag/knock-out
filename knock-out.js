@@ -1,6 +1,6 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
-import {Obstacle, Table} from "./entity.js";
+import {Chip, Obstacle, Table} from "./entity.js";
 import {PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 
@@ -19,8 +19,11 @@ export class KnockOut extends Scene {
         // Objects
         this.entities = {
             table: new Table(),
-            obstacle1: new Obstacle(),
+            obstacle_left: new Obstacle( "left" ),
+            obstacle_right: new Obstacle( "right" ),
         };
+        this.player1_chips = [new Chip( "player1", 1), new Chip( "player1", 2 ), new Chip( "player1", 3  ), ];
+        this.player2_chips = [new Chip( "player2", 4 ), new Chip( "player2", 5 ), new Chip( "player2", 6 ), ],
         this.colliders = [];
         this.ui = [new TopBanner(), new PlayerAvatar()];
 
@@ -30,6 +33,7 @@ export class KnockOut extends Scene {
         // Camera and view
         this.view = 0;
         this.currentView = null;
+        this.orthographic = false;
         this.cameras = [new Camera()];
 
         // Frame rate
@@ -45,6 +49,9 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Change Perspective", ["v"], function () {
             this.view += 1;
             this.view %= 3;
+        });
+        this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
+            this.orthographic = !this.orthographic;
         });
     }
 
@@ -84,6 +91,18 @@ export class KnockOut extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
 
+        if (this.orthographic) {
+            const right = -10;
+            const left = 10;
+            const bottom = -6;
+            const top = 6;
+            const near = 1;
+            const far = 100;
+            program_state.projection_transform = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
+                .times(Mat4.translation(-right / (right - left), -top / (top - bottom), -far / (far - near)))
+                .times(Mat4.scale(-3, 3, -3));
+        }
+
         // Setup light
         const light_position = vec4(0, 0, 0, 1);
         const top_light_position = vec4(0, 10, 0, 1);
@@ -103,6 +122,12 @@ export class KnockOut extends Scene {
         for (const i in this.entities) {
             // console.log(i)
             this.entities[i].draw(context, program_state);
+        }
+        for (const i in this.player1_chips) {
+            this.player1_chips[i].draw(context, program_state);
+        }
+        for (const i in this.player2_chips) {
+            this.player2_chips[i].draw(context, program_state);
         }
     }
 }
