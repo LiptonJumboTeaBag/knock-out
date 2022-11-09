@@ -1,5 +1,5 @@
 import {defs, tiny} from './tiny-graphics/common.js';
-import {roboto_bold} from "./assets/fonts/roboto-bold.js";
+import {SceneDrawer, Scene2Texture} from "./scene2texture.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
@@ -12,30 +12,26 @@ const {
 export class UI {
     static camera_transform = Mat4.identity();
     static camera_inverse = Mat4.identity();
+    static turn = 0;
 
-    constructor(cv_dim) {
+    constructor() {
         this.projection_inverse = Mat4.identity();
+    }
 
-        this.scratchpads = [];
-        this.scratchpad_contexts = [];
-        this.scratchpad_textures = [];
-        this.scratchpads_materials = [];
+    /**
+     * Get the current player's turn.
+     * @returns {number} 0 for player 1, 1 for player 2.
+     */
+    static get player() {
+        return UI.turn;
+    }
 
-        for (let i = 0; i < cv_dim.length; i++) {
-            const [width, height] = cv_dim[i];
-
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-
-            this.scratchpads.push(canvas);
-            this.scratchpad_contexts.push(canvas.getContext("2d"));
-            this.scratchpad_textures.push(new Texture("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"));
-            this.scratchpads_materials.push(new Material(new defs.Fake_Bump_Map(1), {
-                ambient: 1,
-                texture: this.scratchpad_textures[i]
-            }));
-        }
+    /**
+     * Set the current player's turn.
+     * @param p 0 for player 1, 1 for player 2.
+     */
+    static set player(p) {
+        UI.turn = p;
     }
 
     /**
@@ -72,17 +68,13 @@ export class UI {
     }
 }
 
-export class Scoreboard extends UI {
+export class TopBanner extends UI {
     constructor() {
-        super([[256, 256], [256, 256]]);
-
-        this.turn = 0;
+        super();
 
         this.shapes = {
             square: new defs.Square(),
             circle: new defs.Regular_2D_Polygon(25, 25),
-            text: new Text_Shape(roboto_bold),
-            cylinder: new defs.Capped_Cylinder(25, 25),
         };
 
         this.materials = {
@@ -92,87 +84,100 @@ export class Scoreboard extends UI {
                 specularity: 0,
                 color: color(.5, .5, .5, .5)
             }),
-            p1_obj: new Material(new defs.Phong_Shader(), {
-                ambient: .8,
-                diffusivity: 0,
-                specularity: 0,
-                color: color(1, .1, .1, 1)
-            }),
-            p2_obj: new Material(new defs.Phong_Shader(), {
-                ambient: .8,
-                diffusivity: 0,
-                specularity: 0,
-                color: color(25 / 256, 109 / 256, 227 / 256, 1)
-            }),
-            text_image: new Material(new defs.Textured_Phong(1), {
-                ambient: 1, diffusivity: 0, specularity: 0,
-                texture: new Texture("assets/fonts/roboto-bold.png")
-            }),
-        }
-    }
+        };
 
-    /**
-     * Set the current player's turn.
-     * @param p 0 for player 1, 1 for player 2.
-     */
-    set player(p) {
-        this.turn = p;
+        this.text = new TextLine("", "roboto-regular");
+        this.text.set_position(-0.2, .96, 0.0015);
     }
 
     display(context, program_state) {
         super.display(context, program_state);
-
-        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
-        const aspect_ratio = context.width / context.height;
-
-        /* Draw sub-scenes */
-        const cam_matrix_backup = program_state.camera_inverse;
-
-        let cam_x = !this.turn ? 3 * Math.cos(t) : 0;
-        let cam_y = !this.turn ? 3 * Math.sin(t) : 3;
-        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
-
-        // Player 1 object
-        let obj_tr = Mat4.identity();
-        obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
-        // let angle = t * Math.PI / 2.5;
-        // obj_tr.post_multiply(Mat4.translation(0, 0, 0));
-        // obj_tr.post_multiply(Mat4.rotation(angle, 0, 7/5, -7/5));
-        this.shapes.cylinder.draw(context, program_state, obj_tr, this.materials.p1_obj);
-        this.scratchpad_contexts[0].drawImage(context.canvas, 0, 0, 256, 256 / aspect_ratio);
-        this.scratchpad_textures[0].image.src = this.scratchpads[0].toDataURL("image/png");
-        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
-
-        // Player 2 object
-        cam_x = this.turn ? 3 * Math.cos(t) : 0;
-        cam_y = this.turn ? 3 * Math.sin(t) : 3;
-        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
-
-        obj_tr = Mat4.identity();
-        obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
-        this.shapes.cylinder.draw(context, program_state, obj_tr, this.materials.p2_obj);
-        this.scratchpad_contexts[1].drawImage(context.canvas, 0, 0, 256, 256 / aspect_ratio);
-        this.scratchpad_textures[1].image.src = this.scratchpads[1].toDataURL("image/png");
-
-        // Cleanup
-        if (this.skip) {
-            this.scratchpad_textures[0].copy_onto_graphics_card(context.context, false);
-            this.scratchpad_textures[1].copy_onto_graphics_card(context.context, false);
-        }
-        this.skip = true;
-        context.context.clear(context.context.COLOR_BUFFER_BIT | context.context.DEPTH_BUFFER_BIT);
-        program_state.set_camera(cam_matrix_backup);
-
 
         /* Draw main scene */
         const bg_transform = super.get_transform(0, 0.9, 0.25, 0.1);
         bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         this.shapes.square.draw(context, program_state, bg_transform, this.materials.background);
 
-        let l = `Player ${this.turn ? '0' : '1'}'s Turn`;
-        const text_transform = super.get_transform(-0.2, .97, 0.002, 0.002 * aspect_ratio);
-        this.shapes.text.set_string(l, context.context);
-        this.shapes.text.draw(context, program_state, text_transform, this.materials.text_image.override({color: color(1, 0.84, 0, 1)}));
+        this.text.text = `Player ${UI.player === 0 ? '1' : '2'}'s Turn`;
+        this.text.display(context, program_state);
+    }
+}
+
+/**
+ * Displays player avatars on top corners of the screen.
+ */
+export class PlayerAvatar extends UI {
+    constructor() {
+        super();
+
+        // Player labels
+        this.p1_label = new TextLine("Player 1", "roboto-bold", hex_color("#ff4965"));
+        this.p1_label.set_position(-0.95, 0.73, 0.001);
+        this.p2_label = new TextLine("Player 2", "roboto-bold", hex_color("#4a90e2"));
+        this.p2_label.set_position(0.85, 0.73, 0.001);
+
+        this.shapes = {
+            cylinder: new defs.Capped_Cylinder(20, 20),  // Player's chip
+            square: new defs.Square(),
+        }
+
+        this.materials = {
+            // Textures of player's chips
+            p1_obj: new Material(new defs.Phong_Shader(), {
+                ambient: 1,
+                diffusivity: 0.6,
+                specularity: 0.3,
+                color: color(1, .1, .1, 1)
+            }),
+            p2_obj: new Material(new defs.Phong_Shader(), {
+                ambient: 1,
+                diffusivity: 0.6,
+                specularity: 0.3,
+                color: color(25 / 256, 109 / 256, 227 / 256, 1)
+            }),
+            // Background of label texts
+            background: new Material(new defs.Phong_Shader(), {
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                color: color(.5, .5, .5, .5)
+            }),
+        }
+
+        // Register sub-scene drawers
+        this.drawer_p1 = new SceneDrawer(256, 256, ((c, p) => this.display_player(c, p, 0)).bind(this));
+        Scene2Texture.register(this.drawer_p1);
+        this.p1_avatar_material = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 1,
+            texture: this.drawer_p1.texture,
+        });
+
+        this.drawer_p2 = new SceneDrawer(256, 256, ((c, p) => this.display_player(c, p, 1)).bind(this));
+        Scene2Texture.register(this.drawer_p2);
+        this.p2_avatar_material = new Material(new defs.Fake_Bump_Map(1), {
+            ambient: 1,
+            texture: this.drawer_p2.texture,
+        });
+    }
+
+    display_player(context, program_state, player) {
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+        let cam_x = UI.player === player ? 3 * Math.cos(t) : 0;
+        let cam_y = UI.player === player ? 3 * Math.sin(t) : 3;
+        let light_x = UI.player === player ? 6 * Math.cos(t) : 0;
+        let light_y = UI.player === player ? 6 * Math.sin(t) : 6;
+        program_state.set_camera(Mat4.look_at(vec3(cam_x, 0, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
+        program_state.lights = [new Light(vec4(light_x, 0, light_y, 1), color(1, 1, 1, 1), 1000)];
+
+        let obj_tr = Mat4.identity();
+        obj_tr.post_multiply(Mat4.rotation(Math.PI * 6 / 10, 1, 0, 0));
+        this.shapes.cylinder.draw(context, program_state, obj_tr, player === 0 ? this.materials.p1_obj : this.materials.p2_obj);
+    }
+
+    display(context, program_state) {
+        super.display(context, program_state);
+        const aspect_ratio = context.width / context.height;
 
         // Draw player avatars
         const avatar_width = 0.1;
@@ -182,15 +187,15 @@ export class Scoreboard extends UI {
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.square.draw(context, program_state, p1_avt_transform, this.scratchpads_materials[0]);
+        this.shapes.square.draw(context, program_state, p1_avt_transform, this.p1_avatar_material);
         const p2_avt_transform = super.get_transform(
             1 - avatar_width,
             .95 - avatar_height,
             avatar_width, avatar_height
         );
-        this.shapes.square.draw(context, program_state, p2_avt_transform, this.scratchpads_materials[1]);
+        this.shapes.square.draw(context, program_state, p2_avt_transform, this.p2_avatar_material);
 
-        // Draw background for player texts
+        // Draw player label background
         const label_text_size = 0.017;
         const p1_label_bg_transform = super.get_transform(
             -.90,
@@ -209,68 +214,113 @@ export class Scoreboard extends UI {
         p2_label_bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         this.shapes.square.draw(context, program_state, p2_label_bg_transform, this.materials.background);
 
-        // Draw player labels texts ("Player 1" and "Player 2")
-        const p1_label_transform = super.get_transform(
-            -.96, .735, label_text_size / 15, label_text_size / 15 * aspect_ratio
-        );
-        this.shapes.text.set_string("Player 1", context.context);
-        this.shapes.text.draw(context, program_state, p1_label_transform, this.materials.text_image.override({color: color(1, 0, 0, 1)}));
-        const p2_label_transform = super.get_transform(
-            .84, .735, label_text_size / 15, label_text_size / 15 * aspect_ratio
-        );
-        this.shapes.text.set_string("Player 2", context.context);
-        this.shapes.text.draw(context, program_state, p2_label_transform, this.materials.text_image.override({color: color(0, 0, 1, 1)}));
+        // Draw player labels
+        this.p1_label.display(context, program_state);
+        this.p2_label.display(context, program_state);
     }
 }
 
-export class Text_Shape_ {
-    constructor(desc, texture) {
-        this.shapes = {
-            square: new defs.Square(),
-        };
+/**
+ * TextLine is a wrapper for TextShape object for displaying 2d text on the screen.
+ */
+export class TextLine extends UI {
+    /**
+     * @param text -- The text to display
+     * @param font -- The name of the font. "font.json" and "font.png" must be in the assets/fonts folder.
+     * @param text_color -- The color of the text
+     */
+    constructor(text, font, text_color = color(1, 1, 1, 1)) {
+        super();
+        this.text = text;
+        this.color = text_color;
 
-        this.materials = {
-            text: new Material(texture, {
-                ambient: 1, diffusivity: 0, specularity: 0,
-                texture: new Texture(texture)
-            })
-        };
+        // Load font description json
+        fetch(`assets/fonts/${font}.json`)
+            .then(res => res.json())
+            .then(data => {
+                this.text_shape = new TextShape(data);
+                this.text_texture = new Material(new defs.Textured_Phong(1), {
+                    ambient: 1, diffusivity: 0, specularity: 0,
+                    texture: new Texture(`assets/fonts/${font}.png`),
+                });
+            });
+    }
 
-        // Load bitmap font
-        this.desc = desc;
-        this.width = desc.common.scaleW;
-        this.height = desc.common.scaleH;
+    /**
+     * Set the position and scale of the text.
+     * @param x -- The x position of the text
+     * @param y -- The y position of the text
+     * @param size -- The size of the text
+     */
+    set_position(x, y, size) {
+        this.x = x;
+        this.y = y;
+        this.size = size;
+    }
+
+    /**
+     * Call this function per frame.
+     */
+    display(context, program_state) {
+        super.display(context, program_state);
+
+        // Skip if any of the required data is not loaded or given yet
+        if (this.x === undefined || this.y === undefined || this.size === undefined || !this.text_shape) return;
+
+        const aspect_ratio = context.width / context.height;
+        const transform = super.get_transform(this.x, this.y, this.size, this.size * aspect_ratio);
+        this.text_shape.set_string(this.text, context.context);
+        this.text_shape.draw(context, program_state, transform, this.text_texture.override({color: this.color}));
     }
 }
 
-class Text_Shape extends Shape {
-    constructor(desc = roboto_bold) {
+/**
+ * TestShape is a 2d shape object that can display texts with various fonts.
+ */
+class TextShape extends Shape {
+    /**
+     * @param desc -- The font description object of the sdf texture.
+     */
+    constructor(desc) {
         super("position", "normal", "texture_coord");
 
-        this.string = "";
-
-        // Load sdf font description
-        this.desc = desc;
-        this.width = desc.common.scaleW;
-        this.height = desc.common.scaleH;
+        this.set_desc(desc);
     }
 
-    set_string(string, context) {
-        if (string === this.string) return;
+    set_desc(desc) {
+        this.desc = desc;
+        this.texture_width = desc.common.scaleW;
+        this.texture_height = desc.common.scaleH;
+        this.string = "";
+    }
 
+    /**
+     * Set the string to be displayed.
+     * @param string -- The string to be displayed.
+     * @param context -- The canvas context.
+     */
+    set_string(string, context) {
+        // Only update if the string is different.
+        if (string === this.string) return;
+        this.string = string;
+
+        // Clear the old vertices and indices.
         this.arrays.position = [];
         this.arrays.normal = [];
         this.arrays.texture_coord = [];
         this.indices = [];
 
-        this.string = string;
-        let last_id = null;
-        let last_x = 0;
+        let last_id = null; // The id of the last character.
+        let last_x = 0;     // The x position of the end of last character.
+        let count = 0;      // The number of characters so far.
 
         for (const ch of string) {
             const desc = this.get_char_desc(ch);
-            const tc_backup = this.arrays.texture_coord.length;
 
+            // Record the length of the texture coord length for trimming later.
+            const tc_length = this.arrays.texture_coord.length;
+
+            // Fetch description values.
             let id = desc.id,
                 x = desc.x,
                 y = desc.y,
@@ -288,21 +338,26 @@ class Text_Shape extends Shape {
 
             // Construct transformation matrix of current character
             const transform = Mat4.identity();
+            // Render later characters on top of earlier ones
+            transform.post_multiply(Mat4.translation(0, 0, -0.001 * count++));
+            // Scale to character size
             transform.post_multiply(Mat4.scale(width / 2, height / 2, 1));
+            // Move top-left corner to origin
             transform.post_multiply(Mat4.translation(1, -1, 0));
+            // Move to character position
             transform.post_multiply(Mat4.translation((last_x + xoffset) / width * 2, -yoffset / height * 2, 0));
-            defs.Square.insert_transformed_copy_into(this, [], transform);
 
-            console.log(`${ch}: ${last_x}`);
-            console.log(desc);
+            // Create square and insert into this
+            // Note: this step inserts 4 extra vertices into texture array, so we need to trim it.
+            defs.Square.insert_transformed_copy_into(this, [], transform);
+            this.arrays.texture_coord = this.arrays.texture_coord.slice(0, tc_length)
 
             // Record x position of next character
             last_x += xadvance + xoffset;
 
             // Construct texture coordinates
-            const left = x / this.width, right = (x + width) / this.width;
-            const top = y / this.height, bottom = (y + height) / this.height;
-            this.arrays.texture_coord = this.arrays.texture_coord.slice(0, tc_backup)
+            const left = x / this.texture_width, right = (x + width) / this.texture_width;
+            const top = y / this.texture_height, bottom = (y + height) / this.texture_height;
             this.arrays.texture_coord.push(...Vector.cast([left, 1 - bottom], [right, 1 - bottom],
                 [left, 1 - top], [right, 1 - top]));
         }
@@ -315,17 +370,26 @@ class Text_Shape extends Shape {
         }
     }
 
+    /**
+     * Get the character description object of a character.
+     * @param ch -- The character. If not found, return the description of "?".
+     * @returns {x: number, y: number, width: number, height: number, xoffset: number, yoffset: number, xadvance: number}
+     */
     get_char_desc(ch) {
         const res = this.desc.chars.find((c) => c.char === ch);
-        // const res = this.desc.characters[ch];
         if (res === undefined) {
             return this.get_char_desc('?');
         }
         return res;
     }
 
+    /**
+     * Get the kerning value of two characters. If not found, return 0.
+     * @param id1 -- The id of the first character.
+     * @param id2 -- The id of the second character.
+     * @returns {number}
+     */
     get_kerning(id1, id2) {
-        // return 0;
         const res = this.desc.kernings.find((k) => k.first === id1 && k.second === id2);
         if (res === undefined) {
             return 0;

@@ -1,7 +1,8 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
 import {Obstacle, Table} from "./entity.js";
-import {Scoreboard, UI} from "./ui.js";
+import {PlayerAvatar, TopBanner, UI} from "./ui.js";
+import {Scene2Texture} from "./scene2texture.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -21,7 +22,7 @@ export class KnockOut extends Scene {
             obstacle1: new Obstacle(),
         };
         this.colliders = [];
-        this.ui = [new Scoreboard()];
+        this.ui = [new TopBanner(), new PlayerAvatar()];
 
         // Game control
         this.game = null;
@@ -87,6 +88,9 @@ export class KnockOut extends Scene {
         const light_position = vec4(0, 0, 0, 1);
         const top_light_position = vec4(0, 10, 0, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10000), new Light(top_light_position, color(1, 1, 1, 1), 10000)];
+
+        // Do sub-scene graphics before the main scene
+        Scene2Texture.draw(context, program_state);
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
