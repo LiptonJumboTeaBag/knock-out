@@ -293,8 +293,8 @@ class Text_Shape extends Shape {
             transform.post_multiply(Mat4.translation((last_x + xoffset) / width * 2, -yoffset / height * 2, 0));
             defs.Square.insert_transformed_copy_into(this, [], transform);
 
-            console.log(`${ch}: ${last_x}`);
-            console.log(desc);
+            // console.log(`${ch}: ${last_x}`);
+            // console.log(desc);
 
             // Record x position of next character
             last_x += xadvance + xoffset;
