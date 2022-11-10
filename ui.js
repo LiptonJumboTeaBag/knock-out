@@ -1,13 +1,5 @@
 import {defs, tiny} from './tiny-graphics/common.js';
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-// import {roboto} from "./assets/fonts/roboto.js";
->>>>>>> Stashed changes
-import {roboto_bold} from "./assets/fonts/roboto-bold.js";
-=======
 import {Scene2Texture, SceneDrawer} from "./scene2texture.js";
->>>>>>> 03038837b8a764db3fd3ba190ab1b4313807fd55
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
