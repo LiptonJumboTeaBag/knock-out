@@ -1,7 +1,8 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
 import {Chip, Obstacle, Table} from "./entity.js";
-import {Scoreboard, UI} from "./ui.js";
+import {PlayerAvatar, TopBanner, UI} from "./ui.js";
+import {Scene2Texture} from "./scene2texture.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -19,12 +20,12 @@ export class KnockOut extends Scene {
         this.entities = {
             table: new Table(),
             obstacle_left: new Obstacle( "left" ),
-            obstacle_right: new Obstacle( "right" ), 
+            obstacle_right: new Obstacle( "right" ),
         };
         this.player1_chips = [new Chip( "player1", 1), new Chip( "player1", 2 ), new Chip( "player1", 3  ), ];
         this.player2_chips = [new Chip( "player2", 4 ), new Chip( "player2", 5 ), new Chip( "player2", 6 ), ],
         this.colliders = [];
-        this.ui = [new Scoreboard()];
+        this.ui = [new TopBanner(), new PlayerAvatar()];
 
         // Game control
         this.game = null;
@@ -52,6 +53,9 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
             this.orthographic = !this.orthographic;
         });
+
+        this.new_line();
+        this.key_triggered_button("Change player", ["c"], () => UI.switch_player());
     }
 
     /**
@@ -101,13 +105,15 @@ export class KnockOut extends Scene {
                 .times(Mat4.translation(-right / (right - left), -top / (top - bottom), -far / (far - near)))
                 .times(Mat4.scale(-3, 3, -3));
         }
-        
-        
-            // Setup light
+
+        // Setup light
         const light_position = vec4(0, 0, 0, 1);
         const top_light_position = vec4(0, 10, 0, 1);
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 10000), new Light(top_light_position, color(1, 1, 1, 1), 10000)];
-        
+
+        // Do sub-scene graphics before the main scene
+        Scene2Texture.draw(context, program_state);
+
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
         // console.log(program_state.camera_inverse.toString())
