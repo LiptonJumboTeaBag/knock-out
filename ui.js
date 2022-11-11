@@ -119,8 +119,10 @@ export class PlayerAvatar extends UI {
         super();
 
         // Player labels
-        this.p1_label = new TextLine("Player 1", "roboto-bold", hex_color("#ff4965"));
-        this.p2_label = new TextLine("Player 2", "roboto-bold", hex_color("#4a90e2"));
+        this.p1_label = new TextLine("Player 1", "roboto-bold");
+        this.p2_label = new TextLine("Player 2", "roboto-bold");
+        this.p1_color = hex_color("#ff4965");
+        this.p2_color = hex_color("#4a90e2");
 
         this.shapes = {
             cylinder: new defs.Capped_Cylinder(20, 20),  // Player's chip
@@ -225,6 +227,13 @@ export class PlayerAvatar extends UI {
         this.shapes.square.draw(context, program_state, p2_label_bg_transform, this.materials.background);
 
         // Draw player labels
+        if (UI.player === 0) {
+            this.p1_label.set_color(this.p1_color);
+            this.p2_label.set_color(color(1, 1, 1, 1));
+        } else {
+            this.p2_label.set_color(this.p2_color);
+            this.p1_label.set_color(color(1, 1, 1, 1));
+        }
         this.p1_label.set_position(-0.90, 0.73, 0.001);
         this.p2_label.set_position(0.90, 0.73, 0.001);
         this.p1_label.display(context, program_state);
@@ -268,6 +277,14 @@ export class TextLine extends UI {
         this.x = x;
         this.y = y;
         this.size = size;
+    }
+
+    /**
+     * Set the color of the text.
+     * @param color -- The color of the text
+     */
+    set_color(color) {
+        this.color = color;
     }
 
     /**
