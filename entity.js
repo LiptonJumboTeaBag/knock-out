@@ -24,12 +24,12 @@ class TriangularPrism extends Shape {
         super("position", "normal",);
         // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
         this.arrays.position = Vector3.cast(
-            [-1, -1, -1], [0, -1, 1], [1, -1, -1], 
+            [-1, -1, -1], [0, -1, 1], [1, -1, -1],
             [-1, -1, -1], [-1, 1, -1], [0, 1, 1], [0, -1, 1],
             [0, -1, 1], [1, -1, -1], [1, 1, -1], [0, 1, 1],
             [-1, 1, -1], [1, 1, -1], [1, -1, -1], [-1, -1, -1],
-            [-1, 1, -1], [0, 1, 1], [1, 1, -1], 
-            );
+            [-1, 1, -1], [0, 1, 1], [1, 1, -1],
+        );
         this.arrays.normal = Vector3.cast(
             [0,-5, 0], [0,-5, 0], [0,-5, 0],
             [-2, 0, 1],[-2, 0, 1],[-2, 0, 1],[-2, 0, 1],
@@ -39,12 +39,12 @@ class TriangularPrism extends Shape {
             );
         // Arrange the vertices into a square shape in texture space too:
         this.indices.push(
-            0, 2 ,1, 
+            0, 2, 1,
             3, 5, 4, 3, 6, 5,
             7, 8, 9, 7, 9, 10,
             11, 12, 13, 11, 13, 14,
             15, 16, 17,
-            );
+        );
     }
 }
 
@@ -115,8 +115,8 @@ export class Chip extends Entity {
         this.collider = new CylinderCollider(this);
         this.velocity = vec3(0, 0, 0);
         this.rotation = Mat4.identity();
-        this.scale = Mat4.scale(scale_r,scale_y, scale_r)
-        this.position = this.position.times(Mat4.translation(0, 
+        this.scale = Mat4.scale(scale_r, scale_y, scale_r);
+        this.position = this.position.times(Mat4.translation(0,
             scale_y, 0));
         this.material = material;
         this.shape = shape;
@@ -150,14 +150,16 @@ export class Chip extends Entity {
                 break;
         }
     }
+
     place(x, z) {
         this.position = this.position.times(Mat4.translation(x, 0, z));
     }
+
     update(delta_time) {
         this.position = this.position.times(Mat4.translation(this.velocity.times(delta_time)));
         this.rotation = this.rotation.times(Mat4.rotation(delta_time, vec3(0, 1, 0)));
-    }  
-    
+    }
+
     draw(context, program_state) {
         const model_transform = this.position
             .times(Mat4.scale(1, 2, 1))

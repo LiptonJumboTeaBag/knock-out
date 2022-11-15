@@ -94,7 +94,7 @@ export class TopBanner extends UI {
         };
 
         // orange color
-        this.text = new TextLine('Drop-out!', "nasalization", hex_color("#FFA500"));
+        this.text = new TextLine('Knock-out!', "nasalization", hex_color("#FFA500"));
         this.text.set_position(0, .96, 0.0016);
     }
 
