@@ -41,6 +41,7 @@ const Canvas_Widget = widgets.Canvas_Widget =
             }
 
             const canvas = this.element.appendChild(document.createElement("canvas"));
+            canvas.id = "knockout-canvas";
 
             if (this.make_controls) {
                 this.embedded_controls_area = this.element.appendChild(document.createElement("div"));

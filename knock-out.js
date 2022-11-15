@@ -3,7 +3,8 @@ import {Camera} from "./camera.js";
 import {Chip, Obstacle, Table} from "./entity.js";
 import {PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
-import { CylinderCollider, CylinderCylinderCollision } from './collider.js';
+import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
+import {MousePicking} from "./mouse-picking.js";
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -20,13 +21,13 @@ export class KnockOut extends Scene {
         // Objects
         this.entities = {
             table: new Table(),
-            obstacle_left: new Obstacle( "left" ),
-            obstacle_right: new Obstacle( "right" ),
+            obstacle_left: new Obstacle("left"),
+            obstacle_right: new Obstacle("right"),
         };
-        this.player1_chips = [new Chip( "player1", 1), new Chip( "player1", 2 ), new Chip( "player1", 3  ), ];
-        this.player2_chips = [new Chip( "player2", 4 ), new Chip( "player2", 5 ), new Chip( "player2", 6 ), ],
-        this.test_collision_chip = new Chip( "player1", 1);
-        this.test_collision_chip.place(0.5,0);
+        this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
+        this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
+        this.test_collision_chip = new Chip("player1", 1);
+        this.test_collision_chip.place(0.5, 0);
         this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
         this.player1_chips[0].collider = new CylinderCollider(this.player1_chips[0]);
         this.colliders = [];
@@ -70,6 +71,13 @@ export class KnockOut extends Scene {
         // Setup control panel
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+        }
+
+        // Setup mouse picking
+        if (!this.mouse_picking) {
+            const canvas = document.querySelector("#knockout-canvas");
+            if (canvas)
+                this.mouse_picking = new MousePicking(canvas, this.player1_chips.concat(this.player2_chips));
         }
 
         // Switch camera view
@@ -118,6 +126,9 @@ export class KnockOut extends Scene {
 
         // Do sub-scene graphics before the main scene
         Scene2Texture.draw(context, program_state);
+
+        // Mouse picking
+        this.mouse_picking.update(context, program_state);
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
