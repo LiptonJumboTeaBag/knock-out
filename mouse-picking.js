@@ -17,6 +17,8 @@ export class MousePicking {
         this.canvas.addEventListener("mousedown", this.mouseDown.bind(this));
         this.canvas.addEventListener("mouseup", this.mouseUp.bind(this));
 
+        this.enable = true;
+
         // Ray for debugging
         this.sphere = new defs.Subdivision_Sphere(4);
         this.ray_material = new Material(new defs.Phong_Shader(), {
@@ -68,7 +70,7 @@ export class MousePicking {
     }
 
     update(context, program_state, debug = false) {
-        // this.sphere.draw(context, program_state, Mat4.identity().times(Mat4.translation(0, 10, 9)), this.ray_material);
+        if (!this.enable) return;
 
         if (debug && this.ray_origin && this.ray_dir) {
             this.display_ray(context, program_state, this.ray_origin, this.ray_dir);
