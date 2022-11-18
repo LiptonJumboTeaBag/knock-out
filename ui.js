@@ -121,8 +121,8 @@ export class PlayerAvatar extends UI {
         // Player labels
         this.p1_label = new TextLine("Player 1", "roboto-bold");
         this.p2_label = new TextLine("Player 2", "roboto-bold");
-        this.p1_color = hex_color("#ff4965");
-        this.p2_color = hex_color("#4a90e2");
+        this.p1_color = hex_color("#ff556f");
+        this.p2_color = hex_color("#5aa6ff");
 
         this.shapes = {
             cylinder: new defs.Capped_Cylinder(20, 20),  // Player's chip
@@ -249,6 +249,7 @@ export class TextLine extends UI {
      * @param text -- The text to display
      * @param font -- The name of the font. "font.json" and "font.png" must be in the assets/fonts folder.
      * @param text_color -- The color of the text
+     * @param msdf -- Whether to use MSDF font or SDF font
      */
     constructor(text, font, text_color = color(1, 1, 1, 1)) {
         super();
@@ -260,8 +261,7 @@ export class TextLine extends UI {
             .then(res => res.json())
             .then(data => {
                 this.text_shape = new TextShape(data);
-                this.text_texture = new Material(new defs.Textured_Phong(1), {
-                    ambient: 1, diffusivity: 0, specularity: 0,
+                this.text_texture = new Material(new SdfFontShader(1), {
                     texture: new Texture(`assets/fonts/${font}.png`),
                 });
             });
@@ -430,4 +430,35 @@ class TextShape extends Shape {
         }
         return res.amount;
     }
+}
+
+/**
+ * Customized Phong shader for SDF text rendering. Supports overwriting the color of the text.
+ */
+class SdfFontShader extends defs.Textured_Phong {
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+                varying vec2 f_tex_coord;
+                uniform sampler2D texture;
+        
+                void main() {
+                    // Sample the texture image in the correct place:
+                    vec4 tex_color = texture2D( texture, f_tex_coord );
+                    if( tex_color.a < 0.01 ) discard;
+                    
+                    // SDF color
+//                    float w = abs(dFdx(tex_color.a)) + abs(dFdy(tex_color.a));
+                    float alpha = smoothstep(0., 1., tex_color.a);
+                    vec3 color = shape_color.rgb;
+                    if (tex_color.a < 0.35) 
+                        alpha = 0.0;
+                    
+                    // Compute an initial (ambient) color:
+                    gl_FragColor = vec4(color.xyz, tex_color.a * alpha); 
+                    
+                    // Compute the final color with contributions from lights:
+                    gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+                  } `;
+    }
+
 }
