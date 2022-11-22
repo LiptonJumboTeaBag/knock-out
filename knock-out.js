@@ -74,10 +74,12 @@ export class KnockOut extends Scene {
         }
 
         // Setup mouse picking
-        if (!this.mouse_picking) {
+        if (!this.mouse_picking_p1 || !this.mouse_picking_p2) {
             const canvas = document.querySelector("#knockout-canvas");
-            if (canvas)
-                this.mouse_picking = new MousePicking(canvas, this.player1_chips.concat(this.player2_chips));
+            if (canvas) {
+                this.mouse_picking_p1 = new MousePicking(canvas, this.player1_chips, hex_color("#ff556f"));
+                this.mouse_picking_p2 = new MousePicking(canvas, this.player2_chips, hex_color("#5aa6ff"));
+            }
         }
 
         // Switch camera view
@@ -128,7 +130,8 @@ export class KnockOut extends Scene {
         Scene2Texture.draw(context, program_state);
 
         // Mouse picking
-        this.mouse_picking.update(context, program_state);
+        this.mouse_picking_p1.update(context, program_state);
+        this.mouse_picking_p2.update(context, program_state);
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
@@ -150,7 +153,7 @@ export class KnockOut extends Scene {
         }
         this.test_collision_chip.draw(context, program_state);
         if (CylinderCylinderCollision(this.test_collision_chip.collider, this.player1_chips[0].collider)) {
-            console.log("collision");
+            // console.log("collision");
         }
         // console.log(this.test_collision_chip.get_info());
         for (const i in this.player2_chips) {
