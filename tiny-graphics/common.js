@@ -350,7 +350,7 @@ const Cone_Tip = defs.Cone_Tip =
 const Torus = defs.Torus =
     class Torus extends Shape {
         // Build a donut shape.  An example of a surface of revolution.
-        constructor(rows, columns, texture_range=[[0, 1], [0, 1]]) {
+        constructor(rows, columns, texture_range = [[0, 1], [0, 1]]) {
             super("position", "normal", "texture_coord");
             const circle_points = Array(rows).fill(vec3(1 / 3, 0, 0))
                 .map((p, i, a) => Mat4.translation(-2 / 3, 0, 0)
@@ -823,6 +823,7 @@ const Movement_Controls = defs.Movement_Controls =
 
             this.mouse_enabled_canvases = new Set();
             this.will_take_over_graphics_state = true;
+            this.disable_mouse = false;
         }
 
         set_recipient(matrix_closure, inverse_closure) {
@@ -852,13 +853,16 @@ const Movement_Controls = defs.Movement_Controls =
             });
             canvas.addEventListener("mousedown", e => {
                 e.preventDefault();
+                if (this.disable_mouse) return;
                 this.mouse.anchor = mouse_position(e);
             });
             canvas.addEventListener("mousemove", e => {
                 e.preventDefault();
+                if (this.disable_mouse) return;
                 this.mouse.from_center = mouse_position(e);
             });
             canvas.addEventListener("mouseout", e => {
+                if (this.disable_mouse) return;
                 if (!this.mouse.anchor) this.mouse.from_center.scale_by(0)
             });
         }

@@ -121,6 +121,7 @@ export class Chip extends Entity {
         this.material = material;
         this.shape = shape;
         this.player = player;
+        this.selected = false;
         switch (player) {
             case "player1":
                 this.material = this.material.override({color: color(1, .1, .1, 1)});
@@ -166,7 +167,7 @@ export class Chip extends Entity {
             .times(this.rotation)
             .times(this.scale)
             .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
-        this.shape.draw(context, program_state, model_transform, this.material);
+        this.shape.draw(context, program_state, model_transform, this.material.override({color: this.selected ? hex_color("#e5f200") : this.material.color}));
     }
 
     get_info() {
