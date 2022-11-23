@@ -6,6 +6,8 @@ const {
 
 
 export class MousePicking {
+    MAX_FORCE_LENGTH = 4;
+
     constructor(canvas, watching_chips = [], aim_line_color = hex_color("#000000")) {
         // Watching objects and forces
         this.watching_chips = watching_chips;
@@ -76,13 +78,14 @@ export class MousePicking {
 
     // Mouse down event: record start position for dragging
     _mouseDown(event) {
-        if (!this._enable) return;
-        if (!this.selected_chip) return;
-
         // Get mouse position
         const rect = this.canvas.getBoundingClientRect();
         this.mouseX = event.clientX - rect.left;
         this.mouseY = event.clientY - rect.top;
+        this.ray = this._get_click_ray(this.mouseX, this.mouseY);
+
+        if (!this._enable) return;
+        if (!this.selected_chip) return;
 
         // Check if we click a chip
         const selected = this._get_clicked_chip(this.mouseX, this.mouseY);
@@ -103,9 +106,21 @@ export class MousePicking {
         this.mouseY = event.clientY - rect.top;
         if (!this.isMouseDown) return;
 
+        // Intersect clicking position with y=0 plane
+        let down_ray = this._get_click_ray(this.mouseDownPos[0], this.mouseDownPos[1]);
+        let cur_ray = this._get_click_ray(this.mouseX, this.mouseY);
+        let down_a = -down_ray.origin[1] / down_ray.dir[1];
+        let down_pos = down_ray.origin.plus(down_ray.dir.times(down_a));
+        let cur_a = -cur_ray.origin[1] / cur_ray.dir[1];
+        let cur_pos = cur_ray.origin.plus(cur_ray.dir.times(cur_a));
+
         // Calculate force by dragged amount
-        const force = this.mouseDownPos.minus(vec(this.mouseX, this.mouseY)).times(0.1);
+        let force = down_pos.minus(cur_pos).times(5);
+        force = vec(force[0], force[2]);
+        if (force.norm() > this.MAX_FORCE_LENGTH)
+            force = force.normalized().times(this.MAX_FORCE_LENGTH);
         this._forces[this.watching_chips.indexOf(this.selected_chip)] = force;
+
         this.mouseDragged = true;
     }
 
@@ -156,7 +171,6 @@ export class MousePicking {
                 this.context.scratchpad.controls.disable_mouse = false;
             }
             this.selected_chip = null;
-
         }
     }
 
@@ -180,7 +194,6 @@ export class MousePicking {
         const head_pos = to.plus(dir_norm.times(length * 0.1));
         tr = Mat4.identity();
         tr.post_multiply(Mat4.translation(head_pos[0], head_pos[1], head_pos[2]));
-        // tr.post_multiply(Mat4.rotation(angle, axis[0], axis[1], axis[2]));
         tr.post_multiply(Mat4.rotation(angle, axis[0], axis[1], axis[2]));
         tr.post_multiply(Mat4.scale(0.3, 0.12 * length, 0.05));
         tr.post_multiply(Mat4.rotation(Math.PI / 2, -1, 0, 0));
@@ -223,20 +236,35 @@ export class MousePicking {
         }
     }
 
-    // Return the chip in watchObjects that is clicked. If no chip is clicked, return null.
-    _get_clicked_chip(x = this.mouseX, y = this.mouseY) {
-        const lookat_matrix = this.program_state.camera_inverse;
-        const cam_matrix = this.program_state.camera_transform
-        const proj_matrix = this.program_state.projection_transform;
+    // Calculate ray based on click position
+    _get_click_ray(x = this.mouseX, y = this.mouseY) {
         const mouse_x = x / this.context.width * 2 - 1;
         const mouse_y = -(y / this.context.height * 2 - 1);
-        let ray_origin = cam_matrix.times(vec4(0, 0, 0, 1)).to3();
-        let ray = Mat4.inverse(proj_matrix.times(lookat_matrix)).times(vec4(mouse_x, mouse_y, 1, 1)).to3();
-        let ray_dir = ray.normalized();
 
-        this.ray_origin = ray_origin;
-        this.ray_dir = ray_dir;
-        return this._check_collision(ray_origin, ray_dir);
+        // const lookat_matrix = this.program_state.camera_inverse;
+        // const cam_matrix = this.program_state.camera_transform;
+        // const proj_matrix = this.program_state.projection_transform;
+        // let ray_origin = cam_matrix.times(vec4(0, 0, 0, 1)).to3();
+        // let ray = Mat4.inverse(proj_matrix.times(lookat_matrix)).times(vec4(mouse_x, mouse_y, 1, 1)).to3();
+        // let ray_dir = ray.normalized();
+
+        let pos_ndc_near = vec4(mouse_x, mouse_y, -1.0, 1.0);
+        let pos_ndc_far = vec4(mouse_x, mouse_y, 1.0, 1.0);
+        let P = this.program_state.projection_transform;
+        let V = this.program_state.camera_inverse;
+        let pos_world_near = Mat4.inverse(P.times(V)).times(pos_ndc_near);
+        let pos_world_far = Mat4.inverse(P.times(V)).times(pos_ndc_far);
+        pos_world_near.scale_by(1 / pos_world_near[3]);
+        pos_world_far.scale_by(1 / pos_world_far[3]);
+
+        // return {origin: ray_origin, dir: ray_dir};
+        return {origin: pos_world_near.to3(), dir: pos_world_far.minus(pos_world_near).to3().normalized()};
+    }
+
+    // Return the chip in watchObjects that is clicked. If no chip is clicked, return null.
+    _get_clicked_chip(x = this.mouseX, y = this.mouseY) {
+        const ray = this._get_click_ray(x, y);
+        return this._check_collision(ray.origin, ray.dir);
     }
 
     // Check if ray intersects with any chip in watchObjects
@@ -265,6 +293,10 @@ export class MousePicking {
         this.program_state = program_state;
 
         if (!this._enable) return;
+
+        // DEBUG
+        // if (this.ray)
+        //     this._draw_ray(this.ray.origin, this.ray.dir);
 
         // Draw forces arrows
         for (let i = 0; i < this.watching_chips.length; i++) {
