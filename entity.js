@@ -8,7 +8,6 @@ const {
 const phong = new defs.Phong_Shader();
 
 const materials = {
-
     plastic: new Material(phong,
         {ambient: .2, diffusivity: .8, specularity: .5, color: color(.9, .5, .9, 1)}),
     metal: new Material(phong,
@@ -17,6 +16,8 @@ const materials = {
         {ambient: 0.5, diffusivity: 0.8, specularity: .6, color: color(0.9, .9, .9, 1)}),
     chip: new Material(phong,
         {ambient: 0.8, diffusivity: 0.4, specularity: 0.1, color: color(1, 1, 1, 1)}),
+    skybox: new Material(phong,
+        {ambient: 0.7, diffusivity: 0, specularity: 0, color: hex_color("#436cc1")}),
 };
 
 class TriangularPrism extends Shape {
@@ -52,6 +53,7 @@ const shapes = {
     rectangle: new defs.Cube(),
     triangular_prism: new TriangularPrism(),
     cylinder: new defs.Capped_Cylinder(20, 20),
+    box: new defs.Cube(),
 };
 /**
  * Entity is the base class for all 3D objects in the game.
@@ -240,6 +242,18 @@ export class Obstacle extends Entity {
 
 }
 
-export class AimLine extends Entity {
+export class SkyBox extends Entity {
+    constructor(material = materials.skybox, shape = shapes.box, scale_x = 100, scale_y = 100, scale_z = 100) {
+        super();
+        this.scale = Mat4.scale(scale_x, scale_y, scale_z)
+        this.material = material;
+        this.shape = shape;
+    }
 
+    draw(context, program_state) {
+        const model_transform = Mat4.identity()
+            .times(this.scale)
+            .times(Mat4.rotation(Math.PI / 2, 1, 0, 0));
+        this.shape.draw(context, program_state, model_transform, this.material);
+    }
 }

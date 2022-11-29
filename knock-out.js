@@ -1,6 +1,6 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
-import {Chip, Obstacle, Table} from "./entity.js";
+import {Chip, Obstacle, SkyBox, Table} from "./entity.js";
 import {PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
@@ -23,6 +23,7 @@ export class KnockOut extends Scene {
             table: new Table(),
             obstacle_left: new Obstacle("left"),
             obstacle_right: new Obstacle("right"),
+            skybox: new SkyBox(),
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
@@ -131,14 +132,8 @@ export class KnockOut extends Scene {
 
         // Mouse picking
         this.mouse_picking_p1.update(context, program_state);
+        console.log(this.mouse_picking_p1.forces);
         this.mouse_picking_p2.update(context, program_state);
-
-        // Update and draw all ui
-        UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
-        // console.log(program_state.camera_inverse.toString())
-        for (const i in this.ui) {
-            this.ui[i].display(context, program_state);
-        }
 
         // Update and draw all entities
         for (const i in this.entities) {
@@ -160,5 +155,10 @@ export class KnockOut extends Scene {
             this.player2_chips[i].draw(context, program_state);
         }
 
+        // Update and draw all ui
+        UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
+        for (const i in this.ui) {
+            this.ui[i].display(context, program_state);
+        }
     }
 }
