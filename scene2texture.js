@@ -32,6 +32,8 @@ export class Scene2Texture {
         }
 
         const aspect_ratio = context.width / context.height;
+        const width_backup = context.width;
+        const height_backup = context.height;
 
         // Backup camera matrix, projection matrix, and light
         const cam_matrix_backup = program_state.camera_inverse;
@@ -39,11 +41,20 @@ export class Scene2Texture {
         const light_backup = program_state.lights;
 
         for (let scene_drawer of Scene2Texture.scene_drawers) {
+            // Set the aspect ratio temporarily
+            context.width = scene_drawer.width;
+            context.height = scene_drawer.height;
+
             // Draw the scene
             scene_drawer.display_fn(context, program_state);
 
+            // Restore the aspect ratio
+            context.width = width_backup;
+            context.height = height_backup;
+
             // Generate image
-            scene_drawer.scratchpad_context.drawImage(context.canvas, 0, 0, scene_drawer.width, scene_drawer.height / aspect_ratio);
+            // scene_drawer.scratchpad_context.drawImage(context.canvas, 0, 0, scene_drawer.width, scene_drawer.height / aspect_ratio);
+            scene_drawer.scratchpad_context.drawImage(context.canvas, 0, 0, scene_drawer.width, scene_drawer.height);
             scene_drawer.texture.image.src = scene_drawer.scratchpad.toDataURL("image/png");
 
             // Copy onto GPU
