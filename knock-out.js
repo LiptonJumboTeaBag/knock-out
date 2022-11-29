@@ -152,10 +152,14 @@ export class KnockOut extends Scene {
         if (this.start) {
             this.start = !this.start;
             for (const i in this.player1_chips) {
-                this.player1_chips[i].velocity = this.mouse_picking_p1.forces[i][1];
+                if (this.mouse_picking_p1.forces[i][1] !== null) {
+                    this.player1_chips[i].velocity = this.mouse_picking_p1.forces[i][1];
+                }
             }
             for (const i in this.player2_chips) {
-                this.player2_chips[i].velocity = this.mouse_picking_p2.forces[i][1];
+                if (this.mouse_picking_p2.forces[i][1] !== null) {
+                    this.player2_chips[i].velocity = this.mouse_picking_p2.forces[i][1];
+                }
             }
             this.mouse_picking_p1.reset();
             this.mouse_picking_p2.reset();
