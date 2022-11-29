@@ -193,16 +193,21 @@ export class KnockOut extends Scene {
             this.player1_chips[i].draw(context, program_state);
         }
         // console.log(this.player1_chips[0].velocity);
-        this.test_collision_chip.draw(context, program_state);
-        if (CylinderCylinderCollision(this.test_collision_chip.collider, this.player1_chips[0].collider)) {
-            console.log("collision");
-        }
+        // this.test_collision_chip.draw(context, program_state);
+        // if (CylinderCylinderCollision(this.test_collision_chip.collider, this.player1_chips[0].collider)) {
+        //     console.log("collision");
+        // }
         // console.log(this.test_collision_chip.get_info());
         for (const i in this.player2_chips) {
             move(this.player2_chips[i], dt);
             for(const j in this.player1_chips) {
                 if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
                     collide(this.player2_chips[i], this.player1_chips[j]);
+                }
+            }
+            for (const j in this.player2_chips) {
+                if (i !== j && CylinderCylinderCollision(this.player2_chips[i].collider, this.player2_chips[j].collider)) {
+                    collide(this.player2_chips[i], this.player2_chips[j]);
                 }
             }
             this.player2_chips[i].draw(context, program_state);

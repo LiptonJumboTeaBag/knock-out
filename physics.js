@@ -38,8 +38,11 @@ export function move (entity, t) {
 export function collide(entity, other) {
     // if(entity.shape)
     // assuming both are chips for now
+
     let v1 = entity.velocity;
     let v2 = other.velocity;
+    if (v1 == null) v1 = vec(0,0);
+    if (v2 == null) v2 = vec(0,0);
     let relativeVelocity = vec(v1[0] - v2[0], v1[1] - v2[1]);
     let collisionVector = vec(entity.get_info().x - other.get_info().x, entity.get_info().z - other.get_info().z);
     let distance = Math.sqrt(collisionVector[0] * collisionVector[0] + collisionVector[1] * collisionVector[1]);
