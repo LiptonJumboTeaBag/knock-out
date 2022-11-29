@@ -1,7 +1,7 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
 import {Chip, Obstacle, SkyBox, Table} from "./entity.js";
-import {PlayerAvatar, TopBanner, UI} from "./ui.js";
+import {GameAnimation, PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
 import {MousePicking} from "./mouse-picking.js";
@@ -32,7 +32,7 @@ export class KnockOut extends Scene {
         this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
         this.player1_chips[0].collider = new CylinderCollider(this.player1_chips[0]);
         this.colliders = [];
-        this.ui = [new TopBanner(), new PlayerAvatar()];
+        this.ui = [new TopBanner(), new PlayerAvatar(), new GameAnimation()];
 
         // Game control
         this.game = null;
@@ -63,6 +63,11 @@ export class KnockOut extends Scene {
 
         this.new_line();
         this.key_triggered_button("Change player", ["c"], () => UI.switch_player());
+
+        this.new_line();
+        this.key_triggered_button("TEST", ["t"], () => {
+            this.ui[2].start();
+        });
     }
 
     /**
@@ -132,7 +137,6 @@ export class KnockOut extends Scene {
 
         // Mouse picking
         this.mouse_picking_p1.update(context, program_state);
-        console.log(this.mouse_picking_p1.forces);
         this.mouse_picking_p2.update(context, program_state);
 
         // Update and draw all entities
