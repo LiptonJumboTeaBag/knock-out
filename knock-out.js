@@ -5,6 +5,7 @@ import {PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
 import {MousePicking} from "./mouse-picking.js";
+import { move, collide } from './physics.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -27,10 +28,14 @@ export class KnockOut extends Scene {
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
+        for (let i = 0; i < 3; i++) {
+            this.player1_chips[i].collider = new CylinderCollider(this.player1_chips[i]);
+            this.player2_chips[i].collider = new CylinderCollider(this.player2_chips[i]);
+        }
+
         this.test_collision_chip = new Chip("player1", 1);
         this.test_collision_chip.place(0.5, 0);
         this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
-        this.player1_chips[0].collider = new CylinderCollider(this.player1_chips[0]);
         this.colliders = [];
         this.ui = [new TopBanner(), new PlayerAvatar()];
 
@@ -63,6 +68,9 @@ export class KnockOut extends Scene {
 
         this.new_line();
         this.key_triggered_button("Change player", ["c"], () => UI.switch_player());
+        this.key_triggered_button("Move chips", ["m"], function () {
+            this.start = true;
+        });
     }
 
     /**
@@ -130,10 +138,30 @@ export class KnockOut extends Scene {
         // Do sub-scene graphics before the main scene
         Scene2Texture.draw(context, program_state);
 
+        for (let i = 0; i < 3; i++) {
+            this.player1_chips[i].collider = new CylinderCollider(this.player1_chips[i]);
+            this.player2_chips[i].collider = new CylinderCollider(this.player2_chips[i]);
+        }
+
         // Mouse picking
         this.mouse_picking_p1.update(context, program_state);
-        console.log(this.mouse_picking_p1.forces);
         this.mouse_picking_p2.update(context, program_state);
+        // console.log(this.mouse_picking_p1.forces);
+        // game starts, update chips information
+        // add this.end to stop the game
+        if (this.start) {
+            this.start = !this.start;
+            for (const i in this.player1_chips) {
+                this.player1_chips[i].velocity = this.mouse_picking_p1.forces[i][1];
+            }
+            for (const i in this.player2_chips) {
+                this.player2_chips[i].velocity = this.mouse_picking_p2.forces[i][1];
+            }
+            this.mouse_picking_p1.reset();
+            this.mouse_picking_p2.reset();
+        }
+        // console.log(this.player1_chips[0].velocity);
+        // console.log(this.mouse_picking_p1.forces);
 
         // Update and draw all entities
         for (const i in this.entities) {
@@ -141,17 +169,42 @@ export class KnockOut extends Scene {
             this.entities[i].draw(context, program_state);
             // console.log(this.entities[i].get_info())
         }
-        for (const i in this.player1_chips) {
-            this.player1_chips[i].draw(context, program_state);
-            // console.log(this.player1_chips[i].collider);
-            // console.log(this.player1_chips[i].get_info().scale_r);
+        // console.log(this.player2_chips[0].collider);
+        if (CylinderCylinderCollision(this.player1_chips[0].collider, this.player2_chips[0].collider)) {
+            // console.log("collision");
+            
         }
+
+        for (const i in this.player1_chips) {
+            move(this.player1_chips[i], dt);
+            for (const j in this.player2_chips) {
+                if (CylinderCylinderCollision(this.player1_chips[i].collider, this.player2_chips[j].collider)) {
+                    console.log("collision");
+                    // this.player1_chips[i].velocity = vec(0, 0);
+                    collide(this.player1_chips[i], this.player2_chips[j]);
+                }
+            }
+            for (const j in this.player1_chips) {
+                if (i !== j && CylinderCylinderCollision(this.player1_chips[i].collider, this.player1_chips[j].collider)) {
+                    console.log("collision");
+                    collide(this.player1_chips[i], this.player1_chips[j]);
+                }
+            }
+            this.player1_chips[i].draw(context, program_state);
+        }
+        // console.log(this.player1_chips[0].velocity);
         this.test_collision_chip.draw(context, program_state);
         if (CylinderCylinderCollision(this.test_collision_chip.collider, this.player1_chips[0].collider)) {
-            // console.log("collision");
+            console.log("collision");
         }
         // console.log(this.test_collision_chip.get_info());
         for (const i in this.player2_chips) {
+            move(this.player2_chips[i], dt);
+            for(const j in this.player1_chips) {
+                if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
+                    collide(this.player2_chips[i], this.player1_chips[j]);
+                }
+            }
             this.player2_chips[i].draw(context, program_state);
         }
 

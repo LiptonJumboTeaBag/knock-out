@@ -6,9 +6,9 @@ const {
 
 // Cylinder-Clyinder collision
 export function CylinderCylinderCollision(cylinder1, cylinder2) {
-    if (cylinder1.z == cylinder2.z) {
+    if (cylinder1.y == cylinder2.y) {
         let distance = Math.sqrt(Math.pow(cylinder1.x - cylinder2.x, 2)
-                                + Math.pow(cylinder1.y - cylinder2.y, 2));
+                                + Math.pow(cylinder1.z - cylinder2.z, 2));
         return distance <= cylinder1.r + cylinder2.r;
     }
     else return false;

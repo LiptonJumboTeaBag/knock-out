@@ -115,7 +115,7 @@ export class Chip extends Entity {
     constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
         super();
         this.collider = new CylinderCollider(this);
-        this.velocity = vec3(0, 0, 0);
+        this.velocity = vec(0, 0);
         this.rotation = Mat4.identity();
         this.scale = Mat4.scale(scale_r, scale_y, scale_r);
         this.position = this.position.times(Mat4.translation(0,
