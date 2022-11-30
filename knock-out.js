@@ -28,9 +28,12 @@ export class KnockOut extends Scene {
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
-        for (let i = 0; i < 3; i++) {
-            this.player1_chips[i].collider = new CylinderCollider(this.player1_chips[i]);
-            this.player2_chips[i].collider = new CylinderCollider(this.player2_chips[i]);
+
+        for (const chip of this.player1_chips) {
+            chip.collider = new CylinderCollider(chip);
+        }
+        for (const chip of this.player2_chips) {
+            chip.collider = new CylinderCollider(chip);
         }
 
         this.test_collision_chip = new Chip("player1", 1);
@@ -143,15 +146,17 @@ export class KnockOut extends Scene {
         // Do sub-scene graphics before the main scene
         Scene2Texture.draw(context, program_state);
 
-        for (let i = 0; i < 3; i++) {
-            this.player1_chips[i].collider = new CylinderCollider(this.player1_chips[i]);
-            this.player2_chips[i].collider = new CylinderCollider(this.player2_chips[i]);
+        for (const chip of this.player1_chips) {
+            chip.collider = new CylinderCollider(chip);
+        }
+        for (const chip of this.player2_chips) {
+            chip.collider = new CylinderCollider(chip);
         }
 
         // Mouse picking
         this.mouse_picking_p1.update(context, program_state);
         this.mouse_picking_p2.update(context, program_state);
-        // console.log(this.mouse_picking_p1.forces);
+
         // game starts, update chips information
         // add this.end to stop the game
         if (this.start) {
@@ -179,10 +184,6 @@ export class KnockOut extends Scene {
             // console.log(this.entities[i].get_info())
         }
         // console.log(this.player2_chips[0].collider);
-        if (CylinderCylinderCollision(this.player1_chips[0].collider, this.player2_chips[0].collider)) {
-            // console.log("collision");
-
-        }
 
         for (const i in this.player1_chips) {
             move(this.player1_chips[i], dt);

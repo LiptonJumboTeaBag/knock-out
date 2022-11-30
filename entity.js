@@ -124,6 +124,7 @@ export class Chip extends Entity {
         this.shape = shape;
         this.player = player;
         this.selected = false;
+        this.scale_y = scale_y;
         switch (player) {
             case "player1":
                 this.material = this.material.override({color: color(1, .1, .1, 1)});
@@ -155,7 +156,7 @@ export class Chip extends Entity {
     }
 
     place(x, z) {
-        this.position = this.position.times(Mat4.translation(x, 0, z));
+        this.position = Mat4.identity().times(Mat4.translation(x, this.scale_y, z));
     }
 
     update(delta_time) {
