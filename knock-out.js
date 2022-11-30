@@ -49,6 +49,7 @@ export class KnockOut extends Scene {
         this.cameras = [new Camera()];
         // Frame rate
         this.frame_rate = 0;
+        this.initialized = false;
     }
 
     make_control_panel() {
@@ -120,21 +121,27 @@ export class KnockOut extends Scene {
 
         // Update frame rate
         this.frame_rate = 1 / dt;
-
+        if (!this.initialized) {
+            this.initialized = true;
+            program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 10000);
+        }
         // Setup projection matrix
-        program_state.projection_transform = Mat4.perspective(
+        if (!this.orthographic) {
+            var desired = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
-
-        if (this.orthographic) {
+            program_state.projection_transform = desired.map((x, i) => Vector.from(program_state.projection_transform[i]).mix(x, 0.05));
+        }
+        else {
             const right = -10;
             const left = 10;
             const bottom = -6;
             const top = 6;
             const near = 1;
             const far = 100;
-            program_state.projection_transform = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
+            var desired = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
                 .times(Mat4.translation(-right / (right - left), -top / (top - bottom), -far / (far - near)))
                 .times(Mat4.scale(-3, 3, -3));
+            program_state.projection_transform = desired.map((x, i) => Vector.from(program_state.projection_transform[i]).mix(x, 0.2));
         }
 
         // Setup light

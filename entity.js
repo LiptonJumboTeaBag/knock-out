@@ -1,8 +1,9 @@
 import { CylinderCollider, BoxCollider, SphereCollider } from './collider.js';
 import {defs, tiny} from './tiny-graphics/common.js';
 
+const {Textured_Phong} = defs
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture, Canvas_Widget, Code_Widget, Text_Widget, Runtime_Widget
 } = tiny;
 
 const phong = new defs.Phong_Shader();
@@ -18,6 +19,10 @@ const materials = {
         {ambient: 0.8, diffusivity: 0.4, specularity: 0.1, color: color(1, 1, 1, 1)}),
     skybox: new Material(phong,
         {ambient: 0.7, diffusivity: 0, specularity: 0, color: hex_color("#436cc1")}),
+    thonk: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        texture: new Texture("assets/thonk.jpg", "LINEAR_MIPMAP_LINEAR")
+    }),
 };
 
 class TriangularPrism extends Shape {
@@ -112,7 +117,7 @@ export class Entity {
 }
 
 export class Chip extends Entity {
-    constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
+    constructor(player = null, default_pos = null, material = materials.thonk, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
         super();
         this.collider = new CylinderCollider(this);
         this.velocity = vec(0, 0);
