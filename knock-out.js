@@ -71,6 +71,11 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Move chips", ["m"], function () {
             this.start = true;
         });
+
+        this.new_line();
+        this.key_triggered_button("TEST", ["t"], () => {
+            this.ui[2].start();
+        });
     }
 
     /**
@@ -176,7 +181,7 @@ export class KnockOut extends Scene {
         // console.log(this.player2_chips[0].collider);
         if (CylinderCylinderCollision(this.player1_chips[0].collider, this.player2_chips[0].collider)) {
             // console.log("collision");
-            
+
         }
 
         for (const i in this.player1_chips) {
