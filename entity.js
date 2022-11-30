@@ -23,6 +23,16 @@ const materials = {
         ambient: 1, diffusivity: 0.1, specularity: 0.1,
         texture: new Texture("assets/thonk.jpg", "LINEAR_MIPMAP_LINEAR")
     }),
+    cloud: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        // picture from https://opengameart.org/node/11731
+        texture: new Texture("assets/bluecloud_up.jpg", "LINEAR_MIPMAP_LINEAR"),color: color(0,0,0,1)
+    }),
+    wood: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        // https://opengameart.org/node/8721
+        texture: new Texture("assets/wood4.png", "LINEAR_MIPMAP_LINEAR"), color: color(0,0,0,1)
+    }),
 };
 
 class TriangularPrism extends Shape {
@@ -190,7 +200,7 @@ export class Chip extends Entity {
 export class Table extends Entity {
     // place table at origin with scale_x, scale_y, scale_z with the specified materal\
     // the default shape is a cube
-    constructor(material = materials.table, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
+    constructor(material = materials.wood, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
         super();
         this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.material = material;
@@ -205,6 +215,14 @@ export class Table extends Entity {
         output.scale_y = scale[1];
         output.scale_z = scale[2];
         return output;
+    }
+
+    draw(context, program_state) {
+        this.shape.arrays.texture_coord.forEach(
+            (v, i, l) => l[i] = vec(v[0], 2*v[1])
+        )
+        const model_transform = this.position.times(this.rotation).times(this.scale);
+        this.shape.draw(context, program_state, model_transform, this.material);
     }
 }
 
