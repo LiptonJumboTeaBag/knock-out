@@ -366,65 +366,66 @@ export class PlayerAvatar extends UI {
     }
 }
 
-export class GameAnimation extends UI {
-    constructor() {
-        super();
-
-        this.shapes = {
-            square: new defs.Square(),
-        }
-
-        this.materials = {
-            background: new Material(new defs.Phong_Shader(), {
-                ambient: 1,
-                diffusivity: 0,
-                specularity: 0,
-                color: hex_color("#000000", 1),
-            }),
-        }
-
-        this.start_time = 0;
-    }
-
-    start() {
-        this.start_time = this.time_now;
-    }
-
-    display(context, program_state) {
-        super.display(context, program_state);
-        this.time_now = program_state.animation_time / 1000;
-
-        const ease_out = (x) => 1 - Math.pow(1 - x, 1);
-        const ease_in = (x) => Math.pow(x, 1);
-        const ease_in_out = (x) => x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
-
-        const timeline = [
-            0, 0.5, 1.3, 1.8
-        ]
-        const dt = program_state.animation_time / 1000 - this.start_time;
-
-        const leftmost = -0.5;
-        const mid1 = -0.2, mid2 = 0.2;
-        const rightmost = 0.5;
-
-        let tr = null;
-        let alpha = 1;
-        if (dt >= timeline[0] && dt < timeline[1]) {
-            let pos = leftmost + (mid1 - leftmost) * ease_out((dt - timeline[0]) / (timeline[1] - timeline[0]));
-            tr = this.get_transform(pos, 0, 0.3, 0.15);
-        } else if (dt >= timeline[1] && dt < timeline[2]) {
-            let pos = mid1 + (mid2 - mid1) * (dt - timeline[1]) / (timeline[2] - timeline[1]);
-            tr = this.get_transform(pos, 0, 0.3, 0.15);
-        } else if (dt >= timeline[2] && dt < timeline[3]) {
-            let pos = mid2 + (rightmost - mid2) * ease_in((dt - timeline[2]) / (timeline[3] - timeline[2]));
-            tr = this.get_transform(pos, 0, 0.3, 0.15);
-        }
-
-        // Draw square over the whole screen
-        if (tr)
-            this.shapes.square.draw(context, program_state, tr, this.materials.background.override({color: hex_color("#000000", alpha)}));
-    }
-}
+// export class GameAnimation extends UI {
+//     constructor() {
+//         super();
+//
+//         this.shapes = {
+//             square: new defs.Square(),
+//         }
+//
+//         this.materials = {
+//             background: new Material(new defs.Phong_Shader(), {
+//                 ambient: 1,
+//                 diffusivity: 0,
+//                 specularity: 0,
+//                 color: hex_color("#000000", 1),
+//             }),
+//         }
+//
+//         this.start_time = 0;
+//     }
+//
+//     start() {
+//         this.start_time = this.time_now;
+//     }
+//
+//     display(context, program_state) {
+//         return;
+//         super.display(context, program_state);
+//         this.time_now = program_state.animation_time / 1000;
+//
+//         const ease_out = (x) => 1 - Math.pow(1 - x, 1);
+//         const ease_in = (x) => Math.pow(x, 1);
+//         const ease_in_out = (x) => x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
+//
+//         const timeline = [
+//             0, 0.5, 1.3, 1.8
+//         ]
+//         const dt = program_state.animation_time / 1000 - this.start_time;
+//
+//         const leftmost = -0.5;
+//         const mid1 = -0.2, mid2 = 0.2;
+//         const rightmost = 0.5;
+//
+//         let tr = null;
+//         let alpha = 1;
+//         if (dt >= timeline[0] && dt < timeline[1]) {
+//             let pos = leftmost + (mid1 - leftmost) * ease_out((dt - timeline[0]) / (timeline[1] - timeline[0]));
+//             tr = this.get_transform(pos, 0, 0.3, 0.15);
+//         } else if (dt >= timeline[1] && dt < timeline[2]) {
+//             let pos = mid1 + (mid2 - mid1) * (dt - timeline[1]) / (timeline[2] - timeline[1]);
+//             tr = this.get_transform(pos, 0, 0.3, 0.15);
+//         } else if (dt >= timeline[2] && dt < timeline[3]) {
+//             let pos = mid2 + (rightmost - mid2) * ease_in((dt - timeline[2]) / (timeline[3] - timeline[2]));
+//             tr = this.get_transform(pos, 0, 0.3, 0.15);
+//         }
+//
+//         // Draw square over the whole screen
+//         if (tr)
+//             this.shapes.square.draw(context, program_state, tr, this.materials.background.override({color: hex_color("#000000", alpha)}));
+//     }
+// }
 
 /**
  * TextLine is a wrapper for TextShape object for displaying 2d text on the screen.

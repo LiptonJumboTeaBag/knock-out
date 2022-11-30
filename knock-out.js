@@ -1,7 +1,7 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
 import {Chip, Obstacle, SkyBox, Table} from "./entity.js";
-import {GameAnimation, PlayerAvatar, TopBanner, UI} from "./ui.js";
+import {PlayerAvatar, TopBanner, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
 import {MousePicking} from "./mouse-picking.js";
@@ -37,7 +37,7 @@ export class KnockOut extends Scene {
         this.test_collision_chip.place(0.5, 0);
         this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
         this.colliders = [];
-        this.ui = [new TopBanner(), new PlayerAvatar(), new GameAnimation()];
+        this.ui = [new TopBanner(), new PlayerAvatar()];
 
         // Game control
         this.game = null;

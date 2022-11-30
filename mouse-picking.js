@@ -64,6 +64,12 @@ export class MousePicking {
     // Reset forces applied to chips
     reset() {
         this._forces = Array(this.watching_chips.length).fill(null);
+        if (this.selected_chip)
+            this.selected_chip.selected = false;
+        this.selected_chip = null;
+        this.isMouseDown = false;
+        this.mouseDownPos = null;
+        this.mouseDragged = false;
     }
 
     // Enable mouse picking for this player
