@@ -56,7 +56,8 @@ export class MousePicking {
     get forces() {
         let result = [];
         for (let i = 0; i < this._forces.length; i++) {
-            result.push([this.watching_chips[i], this._forces[i]]);
+            let scaled_force = this._forces[i] ? this._forces[i].times(2) : null;
+            result.push([this.watching_chips[i], scaled_force]);
         }
         return result;
     }
