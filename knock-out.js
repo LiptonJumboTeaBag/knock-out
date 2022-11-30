@@ -47,7 +47,6 @@ export class KnockOut extends Scene {
         this.currentView = null;
         this.orthographic = false;
         this.cameras = [new Camera()];
-
         // Frame rate
         this.frame_rate = 0;
     }
@@ -64,6 +63,9 @@ export class KnockOut extends Scene {
         });
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
             this.orthographic = !this.orthographic;
+        });
+        this.key_triggered_button("Reset Camera", ["r"], function () {
+            this.cameras[0].reset();
         });
 
         this.new_line();
@@ -93,7 +95,6 @@ export class KnockOut extends Scene {
 
         // Switch camera view
         if (this.view !== this.currentView) {
-            this.currentView = this.view;
             switch (this.view) {
                 case 0:
                     this.cameras[0].LeftPerspective();
@@ -105,8 +106,14 @@ export class KnockOut extends Scene {
                     this.cameras[0].birdEye();
                     break;
             }
-            program_state.set_camera(this.cameras[0].camera_matrix);
+
+            this.ticks = 0;
+            this.currentView = this.view;
         }
+
+        this.cameras[0].update();
+        program_state.set_camera(this.cameras[0].camera_matrix);
+        //program_state.set_camera(desired.map((x,i) => i==0? Vector.from(program_state.camera_inverse[i]).mix(x, 0.1):desired[i]));
 
         // Calculate time
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
