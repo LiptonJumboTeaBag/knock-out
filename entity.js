@@ -266,7 +266,7 @@ export class Chip extends Entity {
                 break;
         }
     }
-    texture_reset() {
+    reset_texture() {
         this.textureNum = 0;
         this.material = materials.chip;
         this.set_color();
@@ -320,7 +320,7 @@ export class Table extends Entity {
                 break;
         }
     }
-    texture_reset() {
+    reset_texture() {
         this.textureNum = 0;
         this.material = materials.table;
     }
@@ -376,7 +376,7 @@ export class Obstacle extends Entity {
                 break;
         }
     }
-    texture_reset() {
+    reset_texture() {
         this.textureNum = 0;
         this.material = materials.plastic;
     }
@@ -410,7 +410,7 @@ export class SkyBox extends Entity {
                 break;
         }
     }
-    texture_reset() {
+    reset_texture() {
         this.textureNum = 0;
         this.material = materials.skybox;
     }
