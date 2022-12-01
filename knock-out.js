@@ -82,7 +82,30 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Reset Camera", ["r"], function () {
             this.cameras[0].reset();
         });
-
+        this.key_triggered_button("Are you High?", ["h"], function () {
+            for (const i in this.entities) {
+                // console.log(i)
+                this.entities[i].change_texture();
+                // console.log(this.entities[i].get_info())
+            }
+            for (const i in this.player1_chips) {
+                this.player1_chips[i].change_texture();
+            }
+            for (const i in this.player2_chips) {
+                this.player2_chips[i].change_texture();
+            }
+        });
+        this.key_triggered_button("Reset texture", ["t"], function () {
+            for (const i in this.entities) {
+                this.entities[i].reset_texture();
+            }
+            for (const i in this.player1_chips) {
+                this.player1_chips[i].reset_texture();
+            }
+            for (const i in this.player2_chips) {
+                this.player2_chips[i].reset_texture();
+            }
+        });
         this.new_line();
         this.key_triggered_button("Change player", ["c"], () => {
             UI.switch_player();

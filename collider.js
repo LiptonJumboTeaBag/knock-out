@@ -142,7 +142,7 @@ export class CylinderCollider extends Collider {
         }
         else if (other.type == 1) {
             // Cylinder-box collision
-
+            return SphereBoxCollision(this, other);
         }
         else if (other.type == 2) {
             // Cylinder-cylinder collision
