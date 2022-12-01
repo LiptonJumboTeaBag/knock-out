@@ -299,6 +299,8 @@ export class MousePicking {
         this.context = context;
         this.program_state = program_state;
 
+        if (!this._enable) return;
+
         // DEBUG
         // if (this.ray)
         //     this._draw_ray(this.ray.origin, this.ray.dir);

@@ -87,38 +87,102 @@ export class TopBanner extends UI {
     constructor() {
         super();
 
-        const background_color = hex_color("#686868", 0.1);
+        // const background_color = hex_color("#f6f7dc", 0.65);
+        // const background_fade_color = hex_color("#2e4354", 0.7);
+        // const text_color = hex_color("#ffffff");
+        // const text_border_color = hex_color("#2e4354", 1);
+
+        const background_color = hex_color("#273848", 0.8);
+        const background_fade_color = hex_color("#46464d", 0.6);
         const text_color = hex_color("#ffffff");
+        const text_border_color = hex_color("#2e4354", 1);
 
         this.shapes = {
             square: new defs.Square(),
         };
 
         this.materials = {
+            background_fade: new Material(new FadeShader(background_fade_color, 0.5, 0.8), {
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                color: background_color,
+            }),
             background: new Material(new defs.Phong_Shader(), {
                 ambient: 1,
                 diffusivity: 0,
                 specularity: 0,
                 color: background_color,
             }),
+            lives_p1: new Material(new defs.Phong_Shader(), {
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                color: hex_color("#ff2000"),
+            }),
+            lives_p2: new Material(new defs.Phong_Shader(), {
+                ambient: 1,
+                diffusivity: 0,
+                specularity: 0,
+                color: hex_color("#0059ff"),
+            }),
         };
 
-        this.text = new TextLine('Knock-out!', "blomberg", text_color, hex_color("#000000"));
-        this.text.set_position(0, .965, 0.002);
+        this.text = new TextLine('Knock-out!', "blomberg", text_color, text_border_color);
+        this.text.set_position(0, .985, 0.002);
         this.text.set_extra_space(2.5);
+
+        this._enabled = true;
+
+        this.player1_remain = 3;
+        this.player2_remain = 3;
+    }
+
+    enable() {
+        this._enabled = true;
+    }
+
+    disable() {
+        this._enabled = false;
+    }
+
+    set_player_remain(player, remain) {
+        if (player === 0) {
+            this.player1_remain = remain;
+        } else {
+            this.player2_remain = remain;
+        }
     }
 
     display(context, program_state) {
         super.display(context, program_state);
 
+        if (!this._enabled) return;
+
         // Draw background.
-        const bg_transform = super.get_transform(0, 0.89, 0.25, 0.1);
+        const bg_transform = super.get_transform(0, 1.13, 1, 0.3);
         bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
-        this.shapes.square.draw(context, program_state, bg_transform, this.materials.background);
+        this.shapes.square.draw(context, program_state, bg_transform, this.materials.background_fade);
 
         // Draw text.
         this.text.text = `Knock-out!`;
         this.text.display(context, program_state);
+
+        // Draw player 1's remaining lives.
+        let x = -0.945
+        for (let i = 0; i < this.player1_remain; i++) {
+            let tr = super.get_transform(x, 0.92, 0.008, 0.05);
+            this.shapes.square.draw(context, program_state, tr, this.materials.lives_p1);
+            x += 0.035;
+        }
+
+        // Draw player 2's remaining lives.
+        x = 0.945
+        for (let i = 0; i < this.player2_remain; i++) {
+            let tr = super.get_transform(x, 0.92, 0.008, 0.05);
+            this.shapes.square.draw(context, program_state, tr, this.materials.lives_p2);
+            x -= 0.035;
+        }
     }
 }
 
@@ -211,6 +275,15 @@ export class PlayerAvatar extends UI {
 
         // Animation variables
         this._last_highlight_scale = 0;
+        this._enable_highlight = true;
+    }
+
+    enable_highlight() {
+        this._enable_highlight = true;
+    }
+
+    disable_highlight() {
+        this._enable_highlight = false;
     }
 
     display_player(context, program_state, player) {
@@ -242,6 +315,8 @@ export class PlayerAvatar extends UI {
     }
 
     draw_highlight(context, program_state, tr) {
+        if (!this._enable_highlight) return;
+
         let t = program_state.animation_time / 1000;
         const animation_time = [
             // First blink
@@ -319,7 +394,7 @@ export class PlayerAvatar extends UI {
         const avatar_height = avatar_width * aspect_ratio;
         const p1_avt_transform = super.get_transform(
             -0.98 + avatar_width,
-            1 - avatar_height,
+            -1 + avatar_height,
             avatar_width, avatar_height
         );
         p1_avt_transform.post_multiply(Mat4.scale(avatar_scale, avatar_scale, 1));
@@ -330,7 +405,7 @@ export class PlayerAvatar extends UI {
 
         const p2_avt_transform = super.get_transform(
             0.98 - avatar_width,
-            1 - avatar_height,
+            -1 + avatar_height,
             avatar_width, avatar_height
         );
         p2_avt_transform.post_multiply(Mat4.scale(avatar_scale, avatar_scale, 1));
@@ -410,8 +485,13 @@ export class GameAnimation extends UIAnimation {
     constructor() {
         super();
 
-        this.text = new TextLine('Game!', "gentleman", hex_color("#ff9600"), hex_color("#ffffff"));
-        // this.text.set_extra_space(2.5);
+        this.text_p1 = new TextLine('Game!', "gentleman", hex_color("#f82e4c"), hex_color("#ffffff"));
+        this.text_p2 = new TextLine('Game!', "gentleman", hex_color("#2f8ff9"), hex_color("#ffffff"));
+        this.text = this.text_p1;
+    }
+
+    set_winner(player) {
+        this.text = player === 0 ? this.text_p1 : this.text_p2;
     }
 
     display(context, program_state) {
@@ -421,7 +501,7 @@ export class GameAnimation extends UIAnimation {
 
         const dt = this.time_now - this.start_time;
 
-        const ease_func = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        const ease_func = (x) => 1.03 * (1 - Math.pow(2, -5 * x));
 
         const end_time = 1.5;
 
@@ -429,7 +509,7 @@ export class GameAnimation extends UIAnimation {
         if (dt < end_time) {
             scale = 0.1 + 0.9 * ease_func(dt / end_time);
         } else {
-            scale = 1;
+            scale = 1 + Math.sin((dt - end_time) * 3) * 0.02;
         }
 
         this.text.set_position(0, 0.25, 0.005 * scale);
@@ -448,15 +528,15 @@ export class TurnAnimation extends UIAnimation {
         const font = "roboto-blackItalic";
 
         this.text_p1 = new TextLine("Red's Turn", font, hex_color("#ff556f"), hex_color("#ffffff"));
-        this.text_p1.set_extra_space(1);
+        this.text_p1.set_extra_space(0.5);
         this.text_p2 = new TextLine("Blue's Turn", font, hex_color("#5aa6ff"), hex_color("#ffffff"));
-        this.text_p2.set_extra_space(1);
+        this.text_p2.set_extra_space(0.5);
 
-        // this.square = new defs.Square();
-        // this.square_material = new Material(new defs.Phong_Shader(), {
-        //     ambient: 1,
-        //     color: hex_color("#ffffff")
-        // });
+        this.parallelogram = new defs.Parallelogram(0.01);
+        this.bg_material = new Material(new defs.Phong_Shader(), {
+            ambient: 1,
+            color: hex_color("#ffffff")
+        });
     }
 
     display(context, program_state) {
@@ -482,20 +562,30 @@ export class TurnAnimation extends UIAnimation {
             0.3,  // Fade out
         ];
         const low_alpha = 0;
-        const factor = 0.6;
+        const factor = 0.3;
+        const factor_banner = 1
 
-        let left = -0.4 * factor;
-        let slide_left = -0.1 * factor;
+        let left_text = -0.4 * factor;
+        let slide_left_text = -0.1 * factor;
+        let left_banner = -2.2 * factor_banner;
+        let slide_left_banner = -0 * factor_banner;
 
         // Calculate pos
-        let pos;
+        let text_pos, upper_banners_pos, lower_banners_pos;
         if (t < prefix_sum(timeline_pos, 0)) {
-            pos = left + (slide_left - left) * ease_in(t / prefix_sum(timeline_pos, 0));
+            text_pos = left_text + (slide_left_text - left_text) * ease_in(t / prefix_sum(timeline_pos, 0));
+            upper_banners_pos = left_banner + (slide_left_banner - left_banner) * ease_in(t / prefix_sum(timeline_pos, 0));
+            lower_banners_pos = -upper_banners_pos;
         } else if (t < prefix_sum(timeline_pos, 1)) {
-            let dist = -2 * slide_left + 0.02 * factor;
-            pos = slide_left + dist * (t - prefix_sum(timeline_pos, 0)) / timeline_pos[1];
+            let dist = -2 * slide_left_text + 0.02 * factor;
+            text_pos = slide_left_text + dist * (t - prefix_sum(timeline_pos, 0)) / timeline_pos[1];
+            let dist2 = -2 * slide_left_banner + 0.02 * factor_banner;
+            upper_banners_pos = slide_left_banner + dist2 * (t - prefix_sum(timeline_pos, 0)) / timeline_pos[1];
+            lower_banners_pos = -upper_banners_pos;
         } else if (t < prefix_sum(timeline_pos, 2)) {
-            pos = -slide_left + (-left + slide_left) * (ease_out((t - prefix_sum(timeline_pos, 1)) / timeline_pos[2]));
+            text_pos = -slide_left_text + (-left_text + slide_left_text) * (ease_out((t - prefix_sum(timeline_pos, 1)) / timeline_pos[2]));
+            upper_banners_pos = -slide_left_banner + (-left_banner + slide_left_banner) * (ease_out((t - prefix_sum(timeline_pos, 1)) / timeline_pos[2]));
+            lower_banners_pos = -upper_banners_pos;
         } else {
             return;
         }
@@ -514,12 +604,15 @@ export class TurnAnimation extends UIAnimation {
 
         const text = UI.player === 0 ? this.text_p1 : this.text_p2;
         text.set_alpha(alpha);
-        text.set_position(pos, 0.1, 0.0025);
+        text.set_position(text_pos, 0.1, 0.0025);
         text.display(context, program_state);
 
-        // let tr = super.get_transform(pos, 0, .26, .11);
-        // this.square_material.color[3] = alpha;
-        // this.square.draw(context, program_state, tr, this.square_material);
+        let tr = super.get_transform(upper_banners_pos, 0.23, 1.2, .08);
+        this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: UI.player === 0 ? hex_color("#ff2000") : hex_color("#0059ff")}));
+        tr = super.get_transform(lower_banners_pos, -0.23, 1.2, .08);
+        this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: UI.player === 0 ? hex_color("#ff2000") : hex_color("#0059ff")}));
+        tr = super.get_transform(0, 0, 1.2, .15);
+        this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: hex_color("#ffffff", alpha)}));
     }
 }
 
@@ -785,5 +878,73 @@ class SdfFontShader extends defs.Textured_Phong {
 
         // Send bg_color to GPU
         context.uniform4fv(gpu_addresses.bg_color, this.bg_color);
+    }
+}
+
+
+class FadeShader extends Shader {
+    constructor(mix_color, pos_percent = 0.4, max_percent = 0.8) {
+        super();
+
+        this.pos_percent = pos_percent;
+        this.mix_color = mix_color;
+        this.max_percent = max_percent;
+    }
+
+    shared_glsl_code() {
+        return `
+            precision mediump float;
+            varying vec4 point_position;
+            varying vec4 center;
+        `;
+    }
+
+    vertex_glsl_code() {
+        return this.shared_glsl_code() + `
+            attribute vec3 position;
+            uniform mat4 model_transform;
+            uniform mat4 projection_camera_model_transform;
+            
+            void main(){
+                gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
+                point_position = model_transform * vec4(position, 1.0);
+                center = model_transform * vec4(0, 0, 0, 1); 
+            }`;
+    }
+
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            uniform vec4 shape_color;
+            uniform vec4 mix_color;
+            uniform float pos_percent;
+            uniform float max_percent;
+    
+            void main(){
+                float dist = distance(point_position, center);
+                vec4 color = shape_color;
+                if (dist > pos_percent) {
+                    color = mix(shape_color, mix_color, (dist - pos_percent) / (max_percent - pos_percent));
+                }
+                gl_FragColor = color;
+            }`;
+    }
+
+    update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+        super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
+
+        // Send info to GPU
+        context.uniform1f(gpu_addresses.pos_percent, this.pos_percent);
+        context.uniform1f(gpu_addresses.max_percent, this.max_percent);
+
+        // Send proj_cam matrix
+        const [P, C, M] = [gpu_state.projection_transform, gpu_state.camera_inverse, model_transform],
+            PCM = P.times(C).times(M);
+        context.uniformMatrix4fv(gpu_addresses.model_transform, false, Matrix.flatten_2D_to_1D(model_transform.transposed()));
+        context.uniformMatrix4fv(gpu_addresses.projection_camera_model_transform, false,
+            Matrix.flatten_2D_to_1D(PCM.transposed()));
+
+        // Send color
+        context.uniform4fv(gpu_addresses.shape_color, material.color);
+        context.uniform4fv(gpu_addresses.mix_color, this.mix_color);
     }
 }

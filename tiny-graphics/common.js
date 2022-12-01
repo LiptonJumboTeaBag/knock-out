@@ -56,6 +56,19 @@ const Square = defs.Square =
     }
 
 
+const Parallelogram = defs.Parallelogram =
+    class Parallelogram extends Shape {
+        constructor(delta_x = 0.5) {
+            super("position", "normal", "texture_coord");
+
+            this.arrays.position = Vector3.cast([-1 - delta_x, -1, 0], [1 - delta_x, -1, 0], [-1 + delta_x, 1, 0], [1 + delta_x, 1, 0]);
+            this.arrays.normal = Vector3.cast([0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1]);
+            this.arrays.texture_coord = Vector.cast([0, 0], [1, 0], [0, 1], [1, 1]);
+            this.indices.push(0, 1, 2, 1, 3, 2);
+        }
+    }
+
+
 const Tetrahedron = defs.Tetrahedron =
     class Tetrahedron extends Shape {
         // **Tetrahedron** demonstrates flat vs smooth shading (a boolean argument selects
