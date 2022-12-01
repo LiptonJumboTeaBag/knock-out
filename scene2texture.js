@@ -69,7 +69,6 @@ export class Scene2Texture {
             program_state.projection_transform = proj_matrix_backup;
             program_state.lights = light_backup;
         }
-
     }
 }
 

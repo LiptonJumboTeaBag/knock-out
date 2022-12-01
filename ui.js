@@ -58,10 +58,14 @@ export class UI {
      * @param height The height of the UI.
      */
     get_transform(x_offset, y_offset, width, height) {
+        return this.get_transform_custom_cam_projection(x_offset, y_offset, width, height, UI.camera_inverse, this.projection_inverse);
+    }
+
+    get_transform_custom_cam_projection(x_offset, y_offset, width, height, camera_inverse, projection_inverse) {
         // First, get the transform of the UI in camera space.
         const transform = Mat4.identity();
-        transform.post_multiply(UI.camera_inverse);
-        transform.post_multiply(this.projection_inverse);
+        transform.post_multiply(camera_inverse);
+        transform.post_multiply(projection_inverse);
 
         // Then, properly scale and translate the UI.
         transform.post_multiply(Mat4.translation(x_offset, y_offset, 0));
@@ -75,6 +79,10 @@ export class UI {
     }
 }
 
+
+/**
+ * Displays top banner of game name.
+ */
 export class TopBanner extends UI {
     constructor() {
         super();
@@ -97,6 +105,7 @@ export class TopBanner extends UI {
 
         this.text = new TextLine('Knock-out!', "blomberg", text_color, hex_color("#000000"));
         this.text.set_position(0, .965, 0.002);
+        this.text.set_extra_space(2.5);
     }
 
     display(context, program_state) {
@@ -109,10 +118,10 @@ export class TopBanner extends UI {
 
         // Draw text.
         this.text.text = `Knock-out!`;
-        this.text.set_extra_space(2);
         this.text.display(context, program_state);
     }
 }
+
 
 /**
  * Displays player avatars on top corners of the screen.
@@ -332,100 +341,187 @@ export class PlayerAvatar extends UI {
 
         // Abandon drawing player labels
         // Draw player label background
-        const label_text_size = 0.017;
-        const p1_label_bg_transform = super.get_transform(
-            -.90,
-            .69,
-            label_text_size * 0.7 * 7,
-            label_text_size * aspect_ratio * 1.5
-        );
-        p1_label_bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
+        // const label_text_size = 0.017;
+        // const p1_label_bg_transform = super.get_transform(
+        //     -.90,
+        //     .69,
+        //     label_text_size * 0.7 * 7,
+        //     label_text_size * aspect_ratio * 1.5
+        // );
+        // p1_label_bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         // this.shapes.square.draw(context, program_state, p1_label_bg_transform, this.materials.background);
-        const p2_label_bg_transform = super.get_transform(
-            .90,
-            .69,
-            label_text_size * 0.7 * 7,
-            label_text_size * aspect_ratio * 1.5
-        );
-        p2_label_bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
+        // const p2_label_bg_transform = super.get_transform(
+        //     .90,
+        //     .69,
+        //     label_text_size * 0.7 * 7,
+        //     label_text_size * aspect_ratio * 1.5
+        // );
+        // p2_label_bg_transform.post_multiply(Mat4.translation(0, 0, 0.01));
         // this.shapes.square.draw(context, program_state, p2_label_bg_transform, this.materials.background);
-
+        //
         // Draw player labels
-        this.p1_label.set_position(-0.90, 0.72, 0.0008);
-        this.p1_label_select.set_position(-0.90, 0.72, 0.0008);
-        this.p2_label.set_position(0.90, 0.72, 0.0008);
-        this.p2_label_select.set_position(0.90, 0.72, 0.0008);
-
-        if (UI.player === 0) {
-            // this.p1_label_select.display(context, program_state);
-            // this.p2_label.display(context, program_state);
-        } else {
-            // this.p1_label.display(context, program_state);
-            // this.p2_label_select.display(context, program_state);
-        }
+        // this.p1_label.set_position(-0.90, 0.72, 0.0008);
+        // this.p1_label_select.set_position(-0.90, 0.72, 0.0008);
+        // this.p2_label.set_position(0.90, 0.72, 0.0008);
+        // this.p2_label_select.set_position(0.90, 0.72, 0.0008);
+        //
+        // if (UI.player === 0) {
+        //     this.p1_label_select.display(context, program_state);
+        //     this.p2_label.display(context, program_state);
+        // } else {
+        //     this.p1_label.display(context, program_state);
+        //     this.p2_label_select.display(context, program_state);
+        // }
     }
 }
 
-// export class GameAnimation extends UI {
-//     constructor() {
-//         super();
-//
-//         this.shapes = {
-//             square: new defs.Square(),
-//         }
-//
-//         this.materials = {
-//             background: new Material(new defs.Phong_Shader(), {
-//                 ambient: 1,
-//                 diffusivity: 0,
-//                 specularity: 0,
-//                 color: hex_color("#000000", 1),
-//             }),
-//         }
-//
-//         this.start_time = 0;
-//     }
-//
-//     start() {
-//         this.start_time = this.time_now;
-//     }
-//
-//     display(context, program_state) {
-//         return;
-//         super.display(context, program_state);
-//         this.time_now = program_state.animation_time / 1000;
-//
-//         const ease_out = (x) => 1 - Math.pow(1 - x, 1);
-//         const ease_in = (x) => Math.pow(x, 1);
-//         const ease_in_out = (x) => x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
-//
-//         const timeline = [
-//             0, 0.5, 1.3, 1.8
-//         ]
-//         const dt = program_state.animation_time / 1000 - this.start_time;
-//
-//         const leftmost = -0.5;
-//         const mid1 = -0.2, mid2 = 0.2;
-//         const rightmost = 0.5;
-//
-//         let tr = null;
-//         let alpha = 1;
-//         if (dt >= timeline[0] && dt < timeline[1]) {
-//             let pos = leftmost + (mid1 - leftmost) * ease_out((dt - timeline[0]) / (timeline[1] - timeline[0]));
-//             tr = this.get_transform(pos, 0, 0.3, 0.15);
-//         } else if (dt >= timeline[1] && dt < timeline[2]) {
-//             let pos = mid1 + (mid2 - mid1) * (dt - timeline[1]) / (timeline[2] - timeline[1]);
-//             tr = this.get_transform(pos, 0, 0.3, 0.15);
-//         } else if (dt >= timeline[2] && dt < timeline[3]) {
-//             let pos = mid2 + (rightmost - mid2) * ease_in((dt - timeline[2]) / (timeline[3] - timeline[2]));
-//             tr = this.get_transform(pos, 0, 0.3, 0.15);
-//         }
-//
-//         // Draw square over the whole screen
-//         if (tr)
-//             this.shapes.square.draw(context, program_state, tr, this.materials.background.override({color: hex_color("#000000", alpha)}));
-//     }
-// }
+
+/**
+ * Super class for UI Animations
+ */
+export class UIAnimation extends UI {
+    constructor() {
+        super();
+
+        this.start_time = 0;
+        this.started = false;
+    }
+
+    start() {
+        this.start_time = this.time_now;
+        this.started = true;
+    }
+
+    end() {
+        this.started = false;
+    }
+
+    display(context, program_state) {
+        super.display(context, program_state);
+        this.time_now = program_state.animation_time / 1000;
+    }
+}
+
+
+/**
+ * Animates "Game!" text when game ends
+ */
+export class GameAnimation extends UIAnimation {
+    constructor() {
+        super();
+
+        this.text = new TextLine('Game!', "gentleman", hex_color("#ff9600"), hex_color("#ffffff"));
+        // this.text.set_extra_space(2.5);
+    }
+
+    display(context, program_state) {
+        super.display(context, program_state);
+
+        if (!this.started) return;
+
+        const dt = this.time_now - this.start_time;
+
+        const ease_func = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+
+        const end_time = 1.5;
+
+        let scale;
+        if (dt < end_time) {
+            scale = 0.1 + 0.9 * ease_func(dt / end_time);
+        } else {
+            scale = 1;
+        }
+
+        this.text.set_position(0, 0.25, 0.005 * scale);
+        this.text.display(context, program_state);
+    }
+}
+
+
+/**
+ * Animate "Red/Blue's Turn" text in each turn
+ */
+export class TurnAnimation extends UIAnimation {
+    constructor() {
+        super();
+
+        const font = "roboto-blackItalic";
+
+        this.text_p1 = new TextLine("Red's Turn", font, hex_color("#ff556f"), hex_color("#ffffff"));
+        this.text_p1.set_extra_space(1);
+        this.text_p2 = new TextLine("Blue's Turn", font, hex_color("#5aa6ff"), hex_color("#ffffff"));
+        this.text_p2.set_extra_space(1);
+
+        // this.square = new defs.Square();
+        // this.square_material = new Material(new defs.Phong_Shader(), {
+        //     ambient: 1,
+        //     color: hex_color("#ffffff")
+        // });
+    }
+
+    display(context, program_state) {
+        super.display(context, program_state);
+        if (!this.started) return;
+
+        const t = this.time_now - this.start_time;
+
+        // Helper functions
+        const prefix_sum = (arr, i) => arr.slice(0, i + 1).reduce((a, b) => a + b, 0);
+        const ease_in = (x) => 1.07 * (1 - Math.pow(1 - 0.6 * x, 3));
+        const ease_out = (x) => Math.pow(0.6 * x + 0.4, 3);
+
+        // Configure animation
+        const timeline_pos = [
+            0.5,  // Move in
+            1,    // Slides to right
+            0.5,  // Move out
+        ];
+        const timeline_alpha = [
+            0.3,  // Fade in
+            1.4,  // Keep
+            0.3,  // Fade out
+        ];
+        const low_alpha = 0;
+        const factor = 0.6;
+
+        let left = -0.4 * factor;
+        let slide_left = -0.1 * factor;
+
+        // Calculate pos
+        let pos;
+        if (t < prefix_sum(timeline_pos, 0)) {
+            pos = left + (slide_left - left) * ease_in(t / prefix_sum(timeline_pos, 0));
+        } else if (t < prefix_sum(timeline_pos, 1)) {
+            let dist = -2 * slide_left + 0.02 * factor;
+            pos = slide_left + dist * (t - prefix_sum(timeline_pos, 0)) / timeline_pos[1];
+        } else if (t < prefix_sum(timeline_pos, 2)) {
+            pos = -slide_left + (-left + slide_left) * (ease_out((t - prefix_sum(timeline_pos, 1)) / timeline_pos[2]));
+        } else {
+            return;
+        }
+
+        // Calculate alpha
+        let alpha;
+        if (t < prefix_sum(timeline_alpha, 0)) {
+            alpha = low_alpha + (1 - low_alpha) * ease_in(t / prefix_sum(timeline_alpha, 0));
+        } else if (t < prefix_sum(timeline_alpha, 1)) {
+            alpha = 1;
+        } else if (t < prefix_sum(timeline_alpha, 2)) {
+            alpha = 1 - (1 - low_alpha) * ease_out((t - prefix_sum(timeline_alpha, 1)) / timeline_alpha[2]);
+        } else {
+            return;
+        }
+
+        const text = UI.player === 0 ? this.text_p1 : this.text_p2;
+        text.set_alpha(alpha);
+        text.set_position(pos, 0.1, 0.0025);
+        text.display(context, program_state);
+
+        // let tr = super.get_transform(pos, 0, .26, .11);
+        // this.square_material.color[3] = alpha;
+        // this.square.draw(context, program_state, tr, this.square_material);
+    }
+}
 
 /**
  * TextLine is a wrapper for TextShape object for displaying 2d text on the screen.
@@ -443,12 +539,14 @@ export class TextLine extends UI {
         this.color = text_color;
         this.extra_space = 0;
 
+        this.shader = new SdfFontShader(background_color);
+
         // Load font description json
         fetch(`assets/fonts/${font}.json`)
             .then(res => res.json())
             .then(data => {
                 this.text_shape = new TextShape(data);
-                this.text_texture = new Material(new SdfFontShader(background_color), {
+                this.text_texture = new Material(this.shader, {
                     texture: new Texture(`assets/fonts/${font}.png`),
                 });
             });
@@ -472,6 +570,23 @@ export class TextLine extends UI {
      */
     set_color(color) {
         this.color = color;
+    }
+
+    /**
+     * Set background color of the text.
+     * @param color -- The color of the background
+     */
+    set_bg_color(color) {
+        this.shader.bg_color = color;
+    }
+
+    /**
+     * Set alpha of the text.
+     * @param alpha -- The alpha of the text
+     */
+    set_alpha(alpha) {
+        this.color[3] = alpha;
+        this.shader.bg_color[3] = alpha;
     }
 
     /**
@@ -500,6 +615,7 @@ export class TextLine extends UI {
         this.text_shape.draw(context, program_state, transform, this.text_texture.override({color: this.color}));
     }
 }
+
 
 /**
  * TestShape is a 2d shape object that can display texts with various fonts.
@@ -629,6 +745,7 @@ class TextShape extends Shape {
     }
 }
 
+
 /**
  * Customized Phong shader for SDF text rendering. Supports overwriting the color of the text.
  */
@@ -652,10 +769,14 @@ class SdfFontShader extends defs.Textured_Phong {
                     
                     // Calculate the correct color of SDF text.
                     float alpha = smoothstep(0., 1., tex_color.a);
-                    if (tex_color.a < 0.35) 
+                    if (tex_color.a < 0.45) 
                         alpha = 0.0;
                     
-                    gl_FragColor = mix(bg_color, vec4(shape_color.rgb, 1.), alpha);
+//                    gl_FragColor = mix(bg_color, vec4(shape_color.rgb, 1.), alpha);
+                    if (tex_color.a < .5)
+                        gl_FragColor = mix(bg_color, vec4(shape_color.rgb, 1.), alpha);
+                    else
+                        gl_FragColor = shape_color;
                   } `;
     }
 
