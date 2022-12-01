@@ -1,8 +1,9 @@
 import { CylinderCollider, BoxCollider, SphereCollider } from './collider.js';
 import {defs, tiny} from './tiny-graphics/common.js';
 
+const {Textured_Phong} = defs
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture, Canvas_Widget, Code_Widget, Text_Widget, Runtime_Widget
 } = tiny;
 
 const phong = new defs.Phong_Shader();
@@ -18,6 +19,20 @@ const materials = {
         {ambient: 0.8, diffusivity: 0.4, specularity: 0.1, color: color(1, 1, 1, 1)}),
     skybox: new Material(phong,
         {ambient: 0.7, diffusivity: 0, specularity: 0, color: hex_color("#436cc1")}),
+    thonk: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        texture: new Texture("assets/thonk.jpg", "LINEAR_MIPMAP_LINEAR")
+    }),
+    cloud: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        // picture from https://opengameart.org/node/11731
+        texture: new Texture("assets/bluecloud_up.jpg", "LINEAR_MIPMAP_LINEAR"),color: color(0,0,0,1)
+    }),
+    wood: new Material(new Textured_Phong(), {
+        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        // https://opengameart.org/node/8721
+        texture: new Texture("assets/wood4.png", "LINEAR_MIPMAP_LINEAR"), color: color(0,0,0,1)
+    }),
 };
 
 class TriangularPrism extends Shape {
@@ -112,7 +127,7 @@ export class Entity {
 }
 
 export class Chip extends Entity {
-    constructor(player = null, default_pos = null, material = materials.chip, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
+    constructor(player = null, default_pos = null, material = materials.thonk, shape = shapes.cylinder, scale_r = 0.5, scale_y = 1/4) {
         super();
         this.collider = new CylinderCollider(this);
         this.velocity = vec(0, 0);
@@ -186,7 +201,7 @@ export class Chip extends Entity {
 export class Table extends Entity {
     // place table at origin with scale_x, scale_y, scale_z with the specified materal\
     // the default shape is a cube
-    constructor(material = materials.table, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
+    constructor(material = materials.wood, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
         super();
         this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.material = material;
@@ -201,6 +216,14 @@ export class Table extends Entity {
         output.scale_y = scale[1];
         output.scale_z = scale[2];
         return output;
+    }
+
+    draw(context, program_state) {
+        this.shape.arrays.texture_coord.forEach(
+            (v, i, l) => l[i] = vec(v[0], 2*v[1])
+        )
+        const model_transform = this.position.times(this.rotation).times(this.scale);
+        this.shape.draw(context, program_state, model_transform, this.material);
     }
 }
 
