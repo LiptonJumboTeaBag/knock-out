@@ -4,6 +4,8 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
 
+const cos = 1/Math.sqrt(5);
+const sin = 2/Math.sqrt(5);
 // Cylinder-Clyinder collision
 export function CylinderCylinderCollision(cylinder1, cylinder2) {
     if (cylinder1.y == cylinder2.y) {
@@ -21,13 +23,17 @@ function SphereSphereCollision(sphere1, sphere2) {
     return distance <= sphere1.r + sphere2.r;
 }
 
-// sphere-box collision
-function SphereBoxCollision(sphere, box) {
-    const x = Math.max(box.x - box.w/2, Math.min(sphere.x, box.x + box.w/2));
-    const y = Math.max(box.y - box.h/2, Math.min(sphere.y, box.y + box.h/2));
-    const z = Math.max(box.z - box.d/2, Math.min(sphere.z, box.z + box.d/2));
-    const distance = Math.sqrt((x - sphere.x) * (x - sphere.x) + (y - sphere.y) * (y - sphere.y) + (z - sphere.z) * (z - sphere.z));
-    return distance <= sphere.r;
+export function CylinderBoxCollision(cylinder, box) {
+    let w = box.w;
+    let d = box.d;
+    let minX = box.x - w * cos - d * sin;
+    let minZ = box.z - w * sin - d * cos;
+    let maxX = box.x + w * cos + d * sin;
+    let maxZ = box.z + w * sin + d * cos;
+    const x = Math.max(minX, Math.min(cylinder.x, maxX));
+    const z = Math.max(minZ, Math.min(cylinder.z, maxZ));
+    const distance = Math.sqrt((x - cylinder.x) * (x - cylinder.x) + (z - cylinder.z) * (z - cylinder.z));
+    return distance < cylinder.r;
 }
 
 function BoxBoxCollision(box1, box2) {
