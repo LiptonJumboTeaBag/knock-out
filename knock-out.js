@@ -60,9 +60,9 @@ export class KnockOut extends Scene {
         this.currentView = null;
         this.orthographic = false;
         this.cameras = [new Camera()];
-
         // Frame rate
         this.frame_rate = 0;
+        this.initialized = false;
     }
 
     make_control_panel() {
@@ -85,7 +85,33 @@ export class KnockOut extends Scene {
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
             this.orthographic = !this.orthographic;
         });
-
+        this.key_triggered_button("Reset Camera", ["r"], function () {
+            this.cameras[0].reset();
+        });
+        this.key_triggered_button("Are you High?", ["h"], function () {
+            for (const i in this.entities) {
+                // console.log(i)
+                this.entities[i].change_texture();
+                // console.log(this.entities[i].get_info())
+            }
+            for (const i in this.player1_chips) {
+                this.player1_chips[i].change_texture();
+            }
+            for (const i in this.player2_chips) {
+                this.player2_chips[i].change_texture();
+            }
+        });
+        this.key_triggered_button("Reset texture", ["t"], function () {
+            for (const i in this.entities) {
+                this.entities[i].reset_texture();
+            }
+            for (const i in this.player1_chips) {
+                this.player1_chips[i].reset_texture();
+            }
+            for (const i in this.player2_chips) {
+                this.player2_chips[i].reset_texture();
+            }
+        });
         this.new_line();
         this.key_triggered_button("Change player", ["c"], () => {
             UI.switch_player();
@@ -134,7 +160,6 @@ export class KnockOut extends Scene {
 
         // Switch camera view
         if (this.view !== this.currentView) {
-            this.currentView = this.view;
             switch (this.view) {
                 case 0:
                     this.cameras[0].LeftPerspective();
@@ -146,29 +171,41 @@ export class KnockOut extends Scene {
                     this.cameras[0].birdEye();
                     break;
             }
-            program_state.set_camera(this.cameras[0].camera_matrix);
+
+            this.ticks = 0;
+            this.currentView = this.view;
         }
+
+        this.cameras[0].update();
+        program_state.set_camera(this.cameras[0].camera_matrix);
+        //program_state.set_camera(desired.map((x,i) => i==0? Vector.from(program_state.camera_inverse[i]).mix(x, 0.1):desired[i]));
 
         // Calculate time
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
         // Update frame rate
         this.frame_rate = 1 / dt;
-
+        if (!this.initialized) {
+            this.initialized = true;
+            program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 10000);
+        }
         // Setup projection matrix
-        program_state.projection_transform = Mat4.perspective(
+        if (!this.orthographic) {
+            var desired = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 10000);
-
-        if (this.orthographic) {
+            program_state.projection_transform = desired.map((x, i) => Vector.from(program_state.projection_transform[i]).mix(x, 0.05));
+        }
+        else {
             const right = -10;
             const left = 10;
             const bottom = -6;
-            const top = 6;
+            const top = 8;
             const near = 1;
             const far = 100;
-            program_state.projection_transform = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
+            var desired = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
                 .times(Mat4.translation(-right / (right - left), -top / (top - bottom), -far / (far - near)))
                 .times(Mat4.scale(-3, 3, -3));
+            program_state.projection_transform = desired.map((x, i) => Vector.from(program_state.projection_transform[i]).mix(x, 0.2));
         }
 
         // Setup light
