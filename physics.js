@@ -50,16 +50,20 @@ export function collide(entity, other) {
             other.velocity[0] += speed * collisionNorm[0];
             other.velocity[1] += speed * collisionNorm[1];
         }
-    }
-    else {
+    } else if (entity.collider.type === 2 && other.collider.type === 1) {
         // entity is a chip and other is a wall
-        // to do
-        if (entity.collider.type === 2 && other.collider.type === 1) {
-            let v1 = entity.velocity;
-            if (v1 == null) v1 = vec(0, 0);
-            let n = other.norm;
-            let r = v1.minus(n.times(2 * v1[0] * n[0] + 2 * v1[1] * n[1]));
-            entity.velocity = r;
-        }
+        let v1 = entity.velocity;
+        if (v1 == null) v1 = vec(0, 0);
+        let n = other.norm;
+
+        // Reflect the object's velocity off the wall
+        let n2 = n.times(n.dot(v1.times(-1)));
+        let u = n2.plus(v1);
+        let v2 = v1.times(-1).plus(u.times(2));
+
+        // console.log("old velocity: " + v1);
+        // console.log("new velocity: " + v2);
+
+        entity.velocity = v2;
     }
 }

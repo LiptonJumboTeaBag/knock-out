@@ -1,6 +1,6 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
-import {Chip, Obstacle, SkyBox, Table, obbox} from "./entity.js";
+import {Chip, obbox, Obstacle, SkyBox, Table} from "./entity.js";
 import {GameAnimation, PlayerAvatar, TopBanner, TurnAnimation, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {BoxCollider, CylinderBoxCollision, CylinderCollider, CylinderCylinderCollision} from './collider.js';
@@ -28,9 +28,6 @@ export class KnockOut extends Scene {
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
-        this.test_chip = new Chip("player1", 1);
-        this.test_chip.place(-3.5,2);
-        this.test_chip.collider = new CylinderCollider(this.test_chip);
         this.obs = [new obbox(Math.atan(2), -2.5, 1), new obbox(Math.atan(-2), 2.5, 1), new obbox(Math.atan(-2), -2.5, -1), new obbox(Math.atan(2), 2.5, -1)];
         for (const ob of this.obs) {
             ob.collider = new BoxCollider(ob);
@@ -42,9 +39,6 @@ export class KnockOut extends Scene {
             chip.collider = new CylinderCollider(chip);
         }
 
-        this.test_collision_chip = new Chip("player1", 1);
-        this.test_collision_chip.place(0.5, 0);
-        this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
         this.colliders = [];
 
         // UI
@@ -63,6 +57,11 @@ export class KnockOut extends Scene {
         // Frame rate
         this.frame_rate = 0;
         this.initialized = false;
+
+        // Trigger physics calculation every 0.01s
+        setInterval(this.calculate_physics.bind(this), 1);
+        this.last_physics_time = 0;
+        this.start_time = Date.now();
     }
 
     make_control_panel() {
@@ -140,10 +139,77 @@ export class KnockOut extends Scene {
         });
     }
 
+    calculate_physics() {
+        const context = this.context;
+        const program_state = this.program_state;
+        if (!context || !program_state) return;
+
+        let dt = Date.now() - this.last_physics_time;
+        dt /= 1000;
+        this.last_physics_time = Date.now();
+        if (Date.now() - this.start_time < 500) return;
+
+        for (const i in this.player1_chips) {
+            for (const j in this.obs) {
+                if (CylinderBoxCollision(this.player1_chips[i].collider, this.obs[j].collider)) {
+                    console.log("collision: " + i + " " + j);
+                    if (this.player1_chips[i].collider.register_collision(this.obs[j].collider)) {
+                        collide(this.player1_chips[i], this.obs[j]);
+                    }
+                } else {
+                    this.player1_chips[i].collider.unregister_collision(this.obs[j].collider);
+                }
+            }
+            move(this.player1_chips[i], dt);
+            for (const j in this.player2_chips) {
+                if (CylinderCylinderCollision(this.player1_chips[i].collider, this.player2_chips[j].collider)) {
+                    console.log("collision");
+                    // this.player1_chips[i].velocity = vec(0, 0);
+                    collide(this.player1_chips[i], this.player2_chips[j]);
+                }
+            }
+            for (const j in this.player1_chips) {
+                if (i !== j && CylinderCylinderCollision(this.player1_chips[i].collider, this.player1_chips[j].collider)) {
+                    console.log("collision");
+                    collide(this.player1_chips[i], this.player1_chips[j]);
+                }
+            }
+        }
+
+        for (const i in this.player2_chips) {
+            move(this.player2_chips[i], dt);
+            for (const j of this.obs) {
+                if (CylinderBoxCollision(this.player2_chips[i].collider, j.collider)) {
+                    if (this.player2_chips[i].collider.register_collision(j.collider)) {
+                        console.log("collision");
+                        collide(this.player2_chips[i], j);
+                    }
+                } else {
+                    this.player2_chips[i].collider.unregister_collision(j.collider);
+                }
+            }
+            for (const j in this.player1_chips) {
+                if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
+                    console.log("collision");
+                    collide(this.player2_chips[i], this.player1_chips[j]);
+                }
+            }
+            for (const j in this.player2_chips) {
+                if (i !== j && CylinderCylinderCollision(this.player2_chips[i].collider, this.player2_chips[j].collider)) {
+                    console.log("collision");
+                    collide(this.player2_chips[i], this.player2_chips[j]);
+                }
+            }
+        }
+    }
+
     /**
      * Handles the display and update of all objects.
      */
     display(context, program_state) {
+        this.context = context;
+        this.program_state = program_state;
+
         // Setup control panel
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
@@ -192,10 +258,9 @@ export class KnockOut extends Scene {
         // Setup projection matrix
         if (!this.orthographic) {
             var desired = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, 1, 10000);
+                Math.PI / 4, context.width / context.height, 1, 10000);
             program_state.projection_transform = desired.map((x, i) => Vector.from(program_state.projection_transform[i]).mix(x, 0.05));
-        }
-        else {
+        } else {
             const right = -10;
             const left = 10;
             const bottom = -6;
@@ -217,10 +282,10 @@ export class KnockOut extends Scene {
         Scene2Texture.draw(context, program_state);
 
         for (const chip of this.player1_chips) {
-            chip.collider = new CylinderCollider(chip);
+            chip.collider.update();
         }
         for (const chip of this.player2_chips) {
-            chip.collider = new CylinderCollider(chip);
+            chip.collider.update();
         }
 
         // Mouse picking
@@ -255,69 +320,24 @@ export class KnockOut extends Scene {
             this.mouse_picking_p1.reset();
             this.mouse_picking_p2.reset();
         }
-        // console.log(this.player1_chips[0].velocity);
-        // console.log(this.mouse_picking_p1.forces);
 
         // Update and draw all entities
         for (const i in this.entities) {
-            // console.log(i)
             this.entities[i].draw(context, program_state);
-            // console.log(this.entities[i].get_info())
         }
-        // console.log(this.player2_chips[0].collider);
-        // console.log(this.abb.get_info());
-        this.test_chip.draw(context, program_state);
         this.obs[0].draw(context, program_state);
         this.obs[1].draw(context, program_state);
         this.obs[2].draw(context, program_state);
         this.obs[3].draw(context, program_state);
 
-        if (CylinderBoxCollision(this.test_chip.collider, this.obs[0].collider)) {
-            console.log("collision");
+        CylinderBoxCollision(this.player1_chips[2].collider, this.obs[0].collider, true, context, program_state);
+
+        // Draw chips
+        for (const chip of this.player1_chips) {
+            chip.draw(context, program_state);
         }
-        // console.log(this.player1_chips[0].get_info());
-        // console.log("test");
-        // console.log(this.abb.norm);
-        for (const i in this.player1_chips) {
-            move(this.player1_chips[i], dt);
-            if (CylinderBoxCollision(this.player1_chips[i].collider, this.obs[0].collider)) {
-                console.log("collision");
-                collide(this.player1_chips[i], this.ob1);
-            }
-            for (const j in this.player2_chips) {
-                if (CylinderCylinderCollision(this.player1_chips[i].collider, this.player2_chips[j].collider)) {
-                    console.log("collision");
-                    // this.player1_chips[i].velocity = vec(0, 0);
-                    collide(this.player1_chips[i], this.player2_chips[j]);
-                }
-            }
-            for (const j in this.player1_chips) {
-                if (i !== j && CylinderCylinderCollision(this.player1_chips[i].collider, this.player1_chips[j].collider)) {
-                    console.log("collision");
-                    collide(this.player1_chips[i], this.player1_chips[j]);
-                }
-            }
-            this.player1_chips[i].draw(context, program_state);
-        }
-        // console.log(this.player1_chips[0].velocity);
-        // this.test_collision_chip.draw(context, program_state);
-        // if (CylinderCylinderCollision(this.test_collision_chip.collider, this.player1_chips[0].collider)) {
-        //     console.log("collision");
-        // }
-        // console.log(this.test_collision_chip.get_info());
-        for (const i in this.player2_chips) {
-            move(this.player2_chips[i], dt);
-            for (const j in this.player1_chips) {
-                if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
-                    collide(this.player2_chips[i], this.player1_chips[j]);
-                }
-            }
-            for (const j in this.player2_chips) {
-                if (i !== j && CylinderCylinderCollision(this.player2_chips[i].collider, this.player2_chips[j].collider)) {
-                    collide(this.player2_chips[i], this.player2_chips[j]);
-                }
-            }
-            this.player2_chips[i].draw(context, program_state);
+        for (const chip of this.player2_chips) {
+            chip.draw(context, program_state);
         }
 
         // Update and draw all ui
