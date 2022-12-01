@@ -170,7 +170,7 @@ export class KnockOut extends Scene {
             const right = -10;
             const left = 10;
             const bottom = -6;
-            const top = 6;
+            const top = 8;
             const near = 1;
             const far = 100;
             var desired = Mat4.scale(1 / (right - left), 1 / (top - bottom), 1 / (far - near))
