@@ -81,6 +81,8 @@ export class MousePicking {
     // Disable mouse picking for this player
     disable_mouse_picking() {
         this._enable = false;
+        if (this.selected_chip)
+            this.selected_chip.selected = false;
     }
 
     // Mouse down event: record start position for dragging
@@ -141,9 +143,7 @@ export class MousePicking {
 
     // Mouse click event: select a chip and disable/restore global mouse control
     _mouseClick(event) {
-        if (!this._enable) {
-            return;
-        }
+        if (!this._enable) return;
 
         if (this.mouseDragged) {
             this.mouseDragged = false;
@@ -298,8 +298,6 @@ export class MousePicking {
     update(context, program_state) {
         this.context = context;
         this.program_state = program_state;
-
-        if (!this._enable) return;
 
         // DEBUG
         // if (this.ray)

@@ -1,11 +1,11 @@
 import {defs, tiny} from './tiny-graphics/common.js';
 import {Camera} from "./camera.js";
 import {Chip, Obstacle, SkyBox, Table} from "./entity.js";
-import {PlayerAvatar, TopBanner, UI} from "./ui.js";
+import {GameAnimation, PlayerAvatar, TopBanner, TurnAnimation, UI} from "./ui.js";
 import {Scene2Texture} from "./scene2texture.js";
 import {CylinderCollider, CylinderCylinderCollision} from './collider.js';
 import {MousePicking} from "./mouse-picking.js";
-import { move, collide } from './physics.js';
+import {collide, move} from './physics.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -40,7 +40,11 @@ export class KnockOut extends Scene {
         this.test_collision_chip.place(0.5, 0);
         this.test_collision_chip.collider = new CylinderCollider(this.test_collision_chip);
         this.colliders = [];
-        this.ui = [new TopBanner(), new PlayerAvatar()];
+
+        // UI
+        this.game_animation = new GameAnimation();
+        this.turn_animation = new TurnAnimation();
+        this.ui = [new TopBanner(), new PlayerAvatar(), this.game_animation, this.turn_animation];
 
         // Game control
         this.game = null;
@@ -61,6 +65,13 @@ export class KnockOut extends Scene {
         });
         this.new_line();
 
+        this.key_triggered_button("Start Game!", ["0"], function () {
+            this.initialized = true;
+            this.turn_animation.start();
+        }.bind(this));
+        this.new_line();
+        this.new_line();
+
         this.key_triggered_button("Change Perspective", ["v"], function () {
             this.view += 1;
             this.view %= 3;
@@ -70,14 +81,30 @@ export class KnockOut extends Scene {
         });
 
         this.new_line();
-        this.key_triggered_button("Change player", ["c"], () => UI.switch_player());
+        this.key_triggered_button("Change player", ["c"], () => {
+            UI.switch_player();
+            this.turn_animation.start();
+        });
         this.key_triggered_button("Move chips", ["m"], function () {
             this.start = true;
         });
 
         this.new_line();
-        this.key_triggered_button("TEST", ["t"], () => {
-            this.ui[2].start();
+        this.new_line();
+        this.live_string(box => box.textContent = "Animation Debug");
+        this.new_line();
+        this.key_triggered_button("Game start", [], () => {
+            this.game_animation.start();
+        });
+        this.key_triggered_button("Game stop", [], () => {
+            this.game_animation.end();
+        });
+        this.new_line();
+        this.key_triggered_button("Turn start", [], () => {
+            this.turn_animation.start();
+        });
+        this.key_triggered_button("Turn stop", [], () => {
+            this.turn_animation.end();
         });
     }
 
@@ -156,6 +183,17 @@ export class KnockOut extends Scene {
         // Mouse picking
         this.mouse_picking_p1.update(context, program_state);
         this.mouse_picking_p2.update(context, program_state);
+        if (UI.player === 0) {
+            this.mouse_picking_p1.enable_mouse_picking();
+            this.mouse_picking_p2.disable_mouse_picking();
+        } else {
+            this.mouse_picking_p1.disable_mouse_picking();
+            this.mouse_picking_p2.enable_mouse_picking();
+        }
+        if (!this.initialized) {
+            this.mouse_picking_p1.disable_mouse_picking();
+            this.mouse_picking_p2.disable_mouse_picking();
+        }
 
         // game starts, update chips information
         // add this.end to stop the game
@@ -210,7 +248,7 @@ export class KnockOut extends Scene {
         // console.log(this.test_collision_chip.get_info());
         for (const i in this.player2_chips) {
             move(this.player2_chips[i], dt);
-            for(const j in this.player1_chips) {
+            for (const j in this.player1_chips) {
                 if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
                     collide(this.player2_chips[i], this.player1_chips[j]);
                 }
