@@ -70,7 +70,7 @@ export class Camera {
                     this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.atan(9/10)/this.pace*2, 0, 0, 1));
                 }
                 else if (this.ticks < this.pace){
-                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(-Math.PI/this.pace, 0, 1, 0));
+                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.PI/this.pace, 0, 1, 0));
                 }
                 else
                     this.current_view = "Left";
@@ -80,7 +80,7 @@ export class Camera {
                     this.camera_matrix = this.camera_matrix.times(Mat4.rotation(-Math.atan(9/10)/this.pace*2, 0, 0, 1));
                 }
                 else if (this.ticks < this.pace){
-                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.PI/this.pace, 0, 1, 0));
+                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(-Math.PI/this.pace, 0, 1, 0));
                 }
                 else
                     this.current_view = "Right";
