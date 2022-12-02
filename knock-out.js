@@ -91,11 +91,11 @@ export class KnockOut extends Scene {
                 if (this.view === 2) {
                     // pass
                 } else if (UI.player === 0) {
-                    this.cameras[0].LeftPerspective();
+                    this.view = 0;
                     this.player1_turn = false;
                 } else if (UI.player === 1) {
                     this.turn_animation.start();
-                    this.cameras[0].RightPerspective();
+                    this.view = 1;
                     this.player2_turn = false;
                 }
             }
@@ -412,7 +412,7 @@ export class KnockOut extends Scene {
             setTimeout((() => {
                 this.turn_animation.start();
                 this.begin_game = true;
-                this.view = 1;
+                this.view = 0;
             }).bind(this), 500);
         }
 
