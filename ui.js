@@ -487,11 +487,19 @@ export class GameAnimation extends UIAnimation {
 
         this.text_p1 = new TextLine('Game!', "gentleman", hex_color("#f82e4c"), hex_color("#ffffff"));
         this.text_p2 = new TextLine('Game!', "gentleman", hex_color("#2f8ff9"), hex_color("#ffffff"));
+        this.text_p3 = new TextLine('DRAW', 'gentleman', hex_color("#808080"), hex_color("#ffffff"));
         this.text = this.text_p1;
     }
 
     set_winner(player) {
-        this.text = player === 0 ? this.text_p1 : this.text_p2;
+        if (player === 0) {
+            this.text = this.text_p1;
+        } else if (player === 1) {
+            this.text = this.text_p2;
+        } else if (player === 2) {
+            this.text = this.text_p3;
+        }
+        // this.text = player === 0 ? this.text_p1 : this.text_p2;
     }
 
     display(context, program_state) {
