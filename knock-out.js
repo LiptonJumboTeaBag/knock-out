@@ -54,7 +54,13 @@ export class KnockOut extends Scene {
         this.ui = [new TopBanner(), new PlayerAvatar(), this.game_animation, this.turn_animation];
 
         // Game control
-        this.game = null;
+        this.game = new Game();
+        this.player1_turn = true;
+        this.player2_turn = true;
+        this.begin_game = false;
+        this.chip1_count = 3;
+        this.chip2_count = 3;
+        this.game_over = false;
 
         // Camera and view
         this.view = 0;
@@ -74,6 +80,7 @@ export class KnockOut extends Scene {
 
         this.key_triggered_button("Start Game!", ["0"], function () {
             this.initialized = true;
+            this.begin_game = true;
             this.turn_animation.start();
         }.bind(this));
         this.new_line();
@@ -114,13 +121,30 @@ export class KnockOut extends Scene {
             }
         });
         this.new_line();
-        this.key_triggered_button("Change player", ["c"], () => {
-            UI.switch_player();
+        this.key_triggered_button("End turn", ["c"], () => {
+            if (this.begin_game) {
+                UI.switch_player();
+                if (this.view === 2) {
+                    // pass
+                } else if (UI.player === 0) {
+                    this.cameras[0].LeftPerspective();
+                    this.player1_turn = false;
+                } else if (UI.player === 1) {
+                    this.turn_animation.start();
+                    this.cameras[0].RightPerspective();
+                    this.player2_turn = false;
+                }
+            }
+        });
+
+        this.key_triggered_button("Next round", ["n"], () => {
             this.turn_animation.start();
+            this.begin_game = true;
+            this.view = 1;
         });
-        this.key_triggered_button("Move chips", ["m"], function () {
-            this.start = true;
-        });
+        // this.key_triggered_button("Move chips", ["m"], function () {
+        //     this.start = true;
+        // });
 
         this.new_line();
         this.new_line();
@@ -234,7 +258,7 @@ export class KnockOut extends Scene {
             this.mouse_picking_p1.disable_mouse_picking();
             this.mouse_picking_p2.enable_mouse_picking();
         }
-        if (!this.initialized) {
+        if (!this.begin_game) {
             this.mouse_picking_p1.disable_mouse_picking();
             this.mouse_picking_p2.disable_mouse_picking();
         }
@@ -320,6 +344,63 @@ export class KnockOut extends Scene {
             }
             this.player2_chips[i].draw(context, program_state);
         }
+
+        // if a chip is out of bounds, remove that chip from game
+        for (const i in this.player1_chips) {
+            if (this.player1_chips[i].collider.x > 3 || this.player1_chips[i].collider.x < -3) {
+                console.log("out of bounds");
+                this.player1_chips.splice(i, 1);
+                this.chip1_count -= 1;
+            } else if (this.player1_chips[i].collider.z > 5 || this.player1_chips[i].collider.z < -5) {
+                console.log("out of bounds");
+                this.player1_chips.splice(i, 1);
+                this.chip1_count -= 1;
+            }
+        }
+        this.ui[0].set_player_remain(0, this.chip1_count);
+        for (const i in this.player2_chips) {
+            if (this.player2_chips[i].collider.x > 3 || this.player2_chips[i].collider.x < -3) {
+                console.log("out of bounds");
+                this.player2_chips.splice(i, 1);
+                this.chip2_count -= 1;
+            } else if (this.player2_chips[i].collider.z > 5 || this.player2_chips[i].collider.z < -5) {
+                console.log("out of bounds");
+                this.player2_chips.splice(i, 1);
+                this.chip2_count -= 1;
+            }
+        }
+        this.ui[0].set_player_remain(1, this.chip2_count);
+
+        if (!this.game_over) {
+            let result = this.game.knockout(this.chip1_count, this.chip2_count);
+            if (result === 0) {
+                // console.log("1 wins");
+                this.game_animation.set_winner(0);
+                this.game_over = true;
+            } else if (result === 1) {
+                // console.log("2 wins");
+                this.game_animation.set_winner(1);
+                this.game_over = true;
+            } else if (result === 2) {
+                // console.log("draw");
+                this.game_animation.set_winner(2);
+                this.game_over = true;
+            }
+
+            if (this.game_over) {
+                this.game_animation.start()
+            }
+        }
+
+        // If both players finished their turn, do this
+        if (!this.player1_turn && !this.player2_turn) {
+            this.start = true;
+            this.begin_game = false;
+            this.player1_turn = true;
+            this.player2_turn = true;
+        }
+        // this.game.play();
+        // this.ui.set_player_remain(0, 1);
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
