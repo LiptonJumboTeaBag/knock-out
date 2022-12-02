@@ -88,7 +88,7 @@ export class KnockOut extends Scene {
         }.bind(this));
 
         this.key_triggered_button("End turn", ["c"], () => {
-            if (this.begin_game && this.ticks > this.cameras[0].pace) {
+            if (this.begin_game && this.ticks > this.cameras[0].pace && this.turn_animation.ended) {
                 UI.switch_player();
                 if (this.view === 2) {
                     // pass

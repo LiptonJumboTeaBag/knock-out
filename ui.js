@@ -561,6 +561,8 @@ export class TurnAnimation extends UIAnimation {
             ambient: 1,
             color: hex_color("#ffffff")
         });
+
+        this.ended = false;
     }
 
     display(context, program_state) {
@@ -594,6 +596,8 @@ export class TurnAnimation extends UIAnimation {
         let left_banner = -2.2 * factor_banner;
         let slide_left_banner = -0 * factor_banner;
 
+        this.ended = false;
+
         // Calculate pos
         let text_pos, upper_banners_pos, lower_banners_pos;
         if (t < prefix_sum(timeline_pos, 0)) {
@@ -611,6 +615,7 @@ export class TurnAnimation extends UIAnimation {
             upper_banners_pos = -slide_left_banner + (-left_banner + slide_left_banner) * (ease_out((t - prefix_sum(timeline_pos, 1)) / timeline_pos[2]));
             lower_banners_pos = -upper_banners_pos;
         } else {
+            this.ended = true;
             return;
         }
 
@@ -623,6 +628,7 @@ export class TurnAnimation extends UIAnimation {
         } else if (t < prefix_sum(timeline_alpha, 2)) {
             alpha = 1 - (1 - low_alpha) * ease_out((t - prefix_sum(timeline_alpha, 1)) / timeline_alpha[2]);
         } else {
+            this.ended = true;
             return;
         }
 
