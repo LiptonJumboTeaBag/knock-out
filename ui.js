@@ -136,6 +136,8 @@ export class TopBanner extends UI {
 
         this.player1_remain = 3;
         this.player2_remain = 3;
+        this.p1_yoffset = Array(3).fill(0.92);
+        this.p2_yoffset = Array(3).fill(0.92);
     }
 
     enable() {
@@ -148,8 +150,22 @@ export class TopBanner extends UI {
 
     set_player_remain(player, remain) {
         if (player === 0) {
+            for (let i = this.player1_remain; i > remain; i--) {
+                // Animate the life to slide up out of the screen.
+                setInterval((() => {
+                    if (this.p1_yoffset[i - 1] > 1.1) return;
+                    this.p1_yoffset[i - 1] += 0.005;
+                }).bind(this), 10);
+            }
             this.player1_remain = remain;
         } else {
+            for (let i = this.player2_remain; i > remain; i--) {
+                // Animate the life to slide up out of the screen.
+                setInterval((() => {
+                    if (this.p2_yoffset[i - 1] > 1.1) return;
+                    this.p2_yoffset[i - 1] += 0.005;
+                }).bind(this), 10);
+            }
             this.player2_remain = remain;
         }
     }
@@ -169,17 +185,17 @@ export class TopBanner extends UI {
         this.text.display(context, program_state);
 
         // Draw player 1's remaining lives.
-        let x = -0.945
-        for (let i = 0; i < this.player1_remain; i++) {
-            let tr = super.get_transform(x, 0.92, 0.008, 0.05);
+        let x = -0.945;
+        for (let i = 0; i < 3; i++) {
+            let tr = super.get_transform(x, this.p1_yoffset[i], 0.008, 0.05);
             this.shapes.square.draw(context, program_state, tr, this.materials.lives_p1);
             x += 0.035;
         }
 
         // Draw player 2's remaining lives.
-        x = 0.945
-        for (let i = 0; i < this.player2_remain; i++) {
-            let tr = super.get_transform(x, 0.92, 0.008, 0.05);
+        x = 0.945;
+        for (let i = 0; i < 3; i++) {
+            let tr = super.get_transform(x, this.p2_yoffset[i], 0.008, 0.05);
             this.shapes.square.draw(context, program_state, tr, this.materials.lives_p2);
             x -= 0.035;
         }
