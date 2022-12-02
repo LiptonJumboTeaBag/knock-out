@@ -362,7 +362,7 @@ export class Obstacle extends Entity {
         else if (config == 'right'){
             this.right();
         }
-    
+
     }
 
     place_obstacle(x, z, angle, ){
