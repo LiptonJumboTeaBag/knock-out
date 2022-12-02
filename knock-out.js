@@ -71,7 +71,7 @@ export class KnockOut extends Scene {
         this.ticks = 0;
 
         // Register physics simulation routine
-        setInterval(this.calculate_physics.bind(this), 1);
+        setInterval(this.calculate_physics.bind(this), 0.1);
         this.last_physics_time = 0;
         this.start_time = Date.now();
     }
@@ -93,7 +93,7 @@ export class KnockOut extends Scene {
                 if (this.view === 2) {
                     // pass
                 } else if (UI.player === 0) {
-                    this.view = 0;
+                    this.view = 2;
                     this.player1_turn = false;
                 } else if (UI.player === 1) {
                     this.turn_animation.start();
@@ -435,5 +435,6 @@ export class KnockOut extends Scene {
         for (const i in this.ui) {
             this.ui[i].display(context, program_state);
         }
+
     }
 }
