@@ -71,9 +71,11 @@ export class KnockOut extends Scene {
         this.ticks = 0;
 
         // Register physics simulation routine
-        setInterval(this.calculate_physics.bind(this), 0.1);
+        setInterval(this.calculate_physics.bind(this), 1);
         this.last_physics_time = 0;
         this.start_time = Date.now();
+
+        this.debug = false;
     }
 
     make_control_panel() {
@@ -89,19 +91,18 @@ export class KnockOut extends Scene {
 
         this.key_triggered_button("End turn", ["c"], () => {
             if (this.begin_game && this.ticks > this.cameras[0].pace && this.turn_animation.ended) {
-                UI.switch_player();
                 if (this.view === 2) {
                     // pass
-                } else if (UI.player === 0) {
-                    this.view = 2;
-                    this.player1_turn = false;
                 } else if (UI.player === 1) {
+                    this.view = 0;
+                    this.player1_turn = false;
+                } else if (UI.player === 0) {
                     this.turn_animation.start();
                     this.view = 1;
                     this.player2_turn = false;
+                    UI.switch_player();
                 }
                 this.ticks = 0;
-                // console.log(this.view, UI.player)
             }
         });
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
@@ -151,6 +152,18 @@ export class KnockOut extends Scene {
 
         this.new_line();
         this.new_line();
+        this.live_string(box => box.textContent = "Debug");
+        this.new_line();
+        // this.key_triggered_button("Change Perspective", ["v"], function () {
+        //     this.view += 1;
+        //     this.view %= 3;
+        // });
+        this.key_triggered_button("Toggle Colliders", ["r"], function () {
+            this.debug = !this.debug;
+        });
+
+        this.new_line();
+        this.new_line();
         this.live_string(box => {
             box.textContent = `Frame rate: ${this.frame_rate.toFixed(2)}`;
         });
@@ -194,7 +207,6 @@ export class KnockOut extends Scene {
         }
 
         for (const i in this.player2_chips) {
-            move(this.player2_chips[i], dt);
             for (const j of this.obs) {
                 if (CylinderBoxCollision(this.player2_chips[i].collider, j.collider)) {
                     if (this.player2_chips[i].collider.register_collision(j.collider)) {
@@ -205,6 +217,7 @@ export class KnockOut extends Scene {
                     this.player2_chips[i].collider.unregister_collision(j.collider);
                 }
             }
+            move(this.player2_chips[i], dt);
             for (const j in this.player1_chips) {
                 if (CylinderCylinderCollision(this.player2_chips[i].collider, this.player1_chips[j].collider)) {
                     console.log("collision");
@@ -359,6 +372,19 @@ export class KnockOut extends Scene {
             chip.draw(context, program_state);
         }
 
+        if (this.debug) {
+            this.obs[0].draw(context, program_state);
+            this.obs[1].draw(context, program_state);
+            this.obs[2].draw(context, program_state);
+            this.obs[3].draw(context, program_state);
+            if (this.player1_chips[0]) {
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[0].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[1].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[2].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[3].collider, true, context, program_state);
+            }
+        }
+
         // if a chip is out of bounds, remove that chip from game
         // we can do a concurrent check for velocity to help with the winning decision later
         this.are_chips_moving = 0;
@@ -406,7 +432,11 @@ export class KnockOut extends Scene {
             }
 
             if (this.game_over) {
-                this.game_animation.start()
+                this.game_animation.start();
+                this.begin_game = false;
+                this.start_simulate = false;
+                this.simulating = false;
+                this.debug = false;
             }
         }
 
@@ -429,6 +459,8 @@ export class KnockOut extends Scene {
             this.player2_turn = true;
             this.view = 2;
             this.ticks = 0;
+
+            UI.switch_player();
         }
         this.ticks++;
         // Update and draw all ui
