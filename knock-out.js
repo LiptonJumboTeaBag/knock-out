@@ -68,6 +68,8 @@ export class KnockOut extends Scene {
         this.frame_rate = 0;
         this.initialized = false;
 
+        this.ticks = 0;
+
         // Register physics simulation routine
         setInterval(this.calculate_physics.bind(this), 1);
         this.last_physics_time = 0;
@@ -86,7 +88,7 @@ export class KnockOut extends Scene {
         }.bind(this));
 
         this.key_triggered_button("End turn", ["c"], () => {
-            if (this.begin_game) {
+            if (this.begin_game && this.ticks > this.cameras[0].pace) {
                 UI.switch_player();
                 if (this.view === 2) {
                     // pass
@@ -98,6 +100,7 @@ export class KnockOut extends Scene {
                     this.view = 1;
                     this.player2_turn = false;
                 }
+                this.ticks = 0;
             }
         });
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
@@ -407,7 +410,7 @@ export class KnockOut extends Scene {
         }
 
         // Automatically go to next turn after simulation is done
-        if (this.simulating && !this.are_chips_moving) {
+        if (this.simulating && !this.are_chips_moving && this.ticks >= this.cameras[0].pace) {
             this.simulating = false;
             setTimeout((() => {
                 this.turn_animation.start();
@@ -424,8 +427,9 @@ export class KnockOut extends Scene {
             this.player1_turn = true;
             this.player2_turn = true;
             this.view = 2;
+            this.ticks = 0;
         }
-
+        this.ticks ++;
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once
         for (const i in this.ui) {
