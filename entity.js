@@ -277,14 +277,14 @@ export class Chip extends Entity {
 export class obbox extends Entity {
     // place table at origin with scale_x, scale_y, scale_z with the specified materal\
     // the default shape is a cube
-    constructor(angle, x, z, material = materials.plastic, shape = shapes.rectangle, scale_x = Math.sqrt(5)/2, scale_y = 1/4, scale_z = 0.1){
+    constructor(angle, x, z, norm, material = materials.plastic, shape = shapes.rectangle, scale_x = Math.sqrt(5)/2, scale_y = 1/4, scale_z = 0.1){
         super();
         this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.material = material;
         this.position = this.position.times(Mat4.translation(x, +scale_y, z));
         this.rotation = Mat4.rotation(angle, 0, 1, 0);
         this.shape = shape;
-        this.norm = vec(2/Math.sqrt(5),1/Math.sqrt(5));
+        this.norm = norm;
     }
 
     get_info() {

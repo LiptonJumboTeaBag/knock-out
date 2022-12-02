@@ -29,7 +29,10 @@ export class KnockOut extends Scene {
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
-        this.obs = [new obbox(Math.atan(2), -2.5, 1), new obbox(Math.atan(-2), 2.5, 1), new obbox(Math.atan(-2), -2.5, -1), new obbox(Math.atan(2), 2.5, -1)];
+        this.obs = [new obbox(Math.atan(2), -2.5, 1, vec(2/Math.sqrt(5),1/Math.sqrt(5))),
+            new obbox(Math.atan(-2), 2.5, 1, vec(-2/Math.sqrt(5),1/Math.sqrt(5))),
+            new obbox(Math.atan(-2), -2.5, -1, vec(2/Math.sqrt(5),-1/Math.sqrt(5))),
+            new obbox(Math.atan(2), 2.5, -1, vec(-2/Math.sqrt(5),-1/Math.sqrt(5)))];
         for (const ob of this.obs) {
             ob.collider = new BoxCollider(ob);
         }
@@ -173,12 +176,12 @@ export class KnockOut extends Scene {
         dt /= 1000;
         this.last_physics_time = Date.now();
         if (Date.now() - this.start_time < 500) return;
-
         for (const i in this.player1_chips) {
             for (const j in this.obs) {
                 if (CylinderBoxCollision(this.player1_chips[i].collider, this.obs[j].collider)) {
-                    console.log("collision: " + i + " " + j);
+                    // console.log("collision: " + i + " " + j);
                     if (this.player1_chips[i].collider.register_collision(this.obs[j].collider)) {
+                        console.log(this.player1_chips[i].get_info());
                         collide(this.player1_chips[i], this.obs[j]);
                     }
                 } else {
@@ -329,7 +332,7 @@ export class KnockOut extends Scene {
         }
 
         // game starts, update chips information
-        // add this.end to stop the game
+        // collect forces
         if (this.start) {
             this.start = !this.start;
             for (const i in this.player1_chips) {
@@ -354,8 +357,6 @@ export class KnockOut extends Scene {
         this.obs[1].draw(context, program_state);
         this.obs[2].draw(context, program_state);
         this.obs[3].draw(context, program_state);
-
-        CylinderBoxCollision(this.player1_chips[2].collider, this.obs[0].collider, true, context, program_state);
 
         // Draw chips
         for (const chip of this.player1_chips) {

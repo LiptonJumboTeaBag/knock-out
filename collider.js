@@ -36,20 +36,25 @@ export function CylinderBoxCollision(cylinder, box, debug = false, context = nul
     let d = 0.0000001
 
     let x1 = box.x + w * cos + d * sin, x2 = box.x - w * cos - d * sin,
-        z1 = box.z - w * sin + d * cos, z2 = box.z + w * sin - d * cos;
-    let x0 = cylinder.x, z0 = cylinder.z;
-    let distance = Math.abs((x2 - x1) * (z1 - z0) - (x1 - x0) * (z2 - z1)) / Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(z2 - z1, 2));
-
-    // if (debug) {
-    //     // console.log("x: " + x + " z: " + z + "; cylinder x: " + cylinder.x + " cylinder z: " + cylinder.z);
-    //     // console.log("minX: " + minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ);
-    //     shape.draw(context, ps, Mat4.identity().times(Mat4.translation(maxX, 0.3, z4)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
-    //     shape.draw(context, ps, Mat4.identity().times(Mat4.translation(minX, 0.3, z3)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
-    //     // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x4, 0.3, maxZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
-    //     // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x3, 0.3, minZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
-    //     // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(box.x, 0.25, box.z)).times(Mat4.scale(0.3, .3, .3)), mat);
-    // }
-    return distance < cylinder.r;
+        z1 = box.z - w * sin + d * cos, z2 = box.z + w * sin - d * cos,
+        x0 = cylinder.x, z0 = cylinder.z;
+    let l = Math.pow(x2 - x1, 2) + Math.pow(z2 - z1, 2);
+    let t = ((x0 - x1) * (x2 - x1) + (z0 - z1) * (z2 - z1)) / l;
+    t = Math.max(0, Math.min(1, t));
+    let nx = x1 + t * (x2 - x1);
+    let nz = z1 + t * (z2 - z1);
+    let distance = Math.sqrt(Math.pow(x0 - nx, 2) + Math.pow(z0 - nz, 2));
+    if (debug) {
+        // console.log("x: " + x + " z: " + z + "; cylinder x: " + cylinder.x + " cylinder z: " + cylinder.z);
+        // console.log("minX: " + minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x1, 0.3, z1)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x2, 0.3, z2)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x4, 0.3, maxZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x3, 0.3, minZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x0, 0.3, z0)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
+        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(box.x, 0.3, box.z)).times(Mat4.scale(0.2, .2, .2)), mat);
+    }
+    return distance <= cylinder.r + 0.1;
 }
 
 function BoxBoxCollision(box1, box2) {
