@@ -393,8 +393,8 @@ export class PlayerAvatar extends UI {
         const avatar_width = 0.1 * avatar_scale;
         const avatar_height = avatar_width * aspect_ratio;
         const p1_avt_transform = super.get_transform(
-            -0.98 + avatar_width,
-            -1 + avatar_height,
+            -0.99 + avatar_width,
+            0.84 - avatar_height,
             avatar_width, avatar_height
         );
         p1_avt_transform.post_multiply(Mat4.scale(avatar_scale, avatar_scale, 1));
@@ -404,8 +404,8 @@ export class PlayerAvatar extends UI {
         }
 
         const p2_avt_transform = super.get_transform(
-            0.98 - avatar_width,
-            -1 + avatar_height,
+            0.99 - avatar_width,
+            0.84 - avatar_height,
             avatar_width, avatar_height
         );
         p2_avt_transform.post_multiply(Mat4.scale(avatar_scale, avatar_scale, 1));
@@ -612,14 +612,14 @@ export class TurnAnimation extends UIAnimation {
 
         const text = UI.player === 0 ? this.text_p1 : this.text_p2;
         text.set_alpha(alpha);
-        text.set_position(text_pos, 0.1, 0.0025);
+        text.set_position(text_pos, 0.08, 0.002);
         text.display(context, program_state);
 
-        let tr = super.get_transform(upper_banners_pos, 0.23, 1.2, .08);
+        let tr = super.get_transform(upper_banners_pos, 0.18, 1.2, .06);
         this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: UI.player === 0 ? hex_color("#ff2000") : hex_color("#0059ff")}));
-        tr = super.get_transform(lower_banners_pos, -0.23, 1.2, .08);
+        tr = super.get_transform(lower_banners_pos, -0.18, 1.2, .06);
         this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: UI.player === 0 ? hex_color("#ff2000") : hex_color("#0059ff")}));
-        tr = super.get_transform(0, 0, 1.2, .15);
+        tr = super.get_transform(0, 0, 1.2, .12);
         this.parallelogram.draw(context, program_state, tr, this.bg_material.override({color: hex_color("#ffffff", alpha)}));
     }
 }

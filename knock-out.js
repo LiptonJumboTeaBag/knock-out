@@ -29,10 +29,10 @@ export class KnockOut extends Scene {
         };
         this.player1_chips = [new Chip("player1", 1), new Chip("player1", 2), new Chip("player1", 3),];
         this.player2_chips = [new Chip("player2", 4), new Chip("player2", 5), new Chip("player2", 6),];
-        this.obs = [new obbox(Math.atan(2), -2.5, 1, vec(2/Math.sqrt(5),1/Math.sqrt(5))),
-            new obbox(Math.atan(-2), 2.5, 1, vec(-2/Math.sqrt(5),1/Math.sqrt(5))),
-            new obbox(Math.atan(-2), -2.5, -1, vec(2/Math.sqrt(5),-1/Math.sqrt(5))),
-            new obbox(Math.atan(2), 2.5, -1, vec(-2/Math.sqrt(5),-1/Math.sqrt(5)))];
+        this.obs = [new obbox(Math.atan(2), -2.5, 1, vec(2 / Math.sqrt(5), 1 / Math.sqrt(5))),
+            new obbox(Math.atan(-2), 2.5, 1, vec(-2 / Math.sqrt(5), 1 / Math.sqrt(5))),
+            new obbox(Math.atan(-2), -2.5, -1, vec(2 / Math.sqrt(5), -1 / Math.sqrt(5))),
+            new obbox(Math.atan(2), 2.5, -1, vec(-2 / Math.sqrt(5), -1 / Math.sqrt(5)))];
         for (const ob of this.obs) {
             ob.collider = new BoxCollider(ob);
         }
@@ -42,8 +42,6 @@ export class KnockOut extends Scene {
         for (const chip of this.player2_chips) {
             chip.collider = new CylinderCollider(chip);
         }
-
-        this.colliders = [];
 
         // UI
         this.game_animation = new GameAnimation();
@@ -58,46 +56,58 @@ export class KnockOut extends Scene {
         this.chip1_count = 3;
         this.chip2_count = 3;
         this.game_over = false;
+        this.simulating = false;
 
         // Camera and view
         this.view = 0;
         this.currentView = null;
         this.orthographic = false;
         this.cameras = [new Camera()];
+
         // Frame rate
         this.frame_rate = 0;
         this.initialized = false;
 
-        // Trigger physics calculation every 0.01s
+        // Register physics simulation routine
         setInterval(this.calculate_physics.bind(this), 1);
         this.last_physics_time = 0;
         this.start_time = Date.now();
     }
 
     make_control_panel() {
-        this.live_string(box => {
-            box.textContent = `Frame rate: ${this.frame_rate.toFixed(2)}`;
-        });
+        this.live_string(box => box.textContent = "Game control");
         this.new_line();
-
         this.key_triggered_button("Start Game!", ["0"], function () {
             this.initialized = true;
             this.begin_game = true;
             this.turn_animation.start();
+            // remove third child from this.control_panel
+            this.control_panel.removeChild(this.control_panel.childNodes[2]);
         }.bind(this));
-        this.new_line();
-        this.new_line();
 
-        this.key_triggered_button("Change Perspective", ["v"], function () {
-            this.view += 1;
-            this.view %= 3;
+        this.key_triggered_button("End turn", ["c"], () => {
+            if (this.begin_game) {
+                UI.switch_player();
+                if (this.view === 2) {
+                    // pass
+                } else if (UI.player === 0) {
+                    this.cameras[0].LeftPerspective();
+                    this.player1_turn = false;
+                } else if (UI.player === 1) {
+                    this.turn_animation.start();
+                    this.cameras[0].RightPerspective();
+                    this.player2_turn = false;
+                }
+            }
         });
         this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
             this.orthographic = !this.orthographic;
         });
-        this.key_triggered_button("Reset Camera", ["r"], function () {
-            this.cameras[0].reset();
-        });
+        this.new_line();
+        this.new_line();
+
+        this.live_string(box => box.textContent = "Want some fresh looks?");
+        this.new_line();
         this.key_triggered_button("Are you High?", ["h"], function () {
             for (const i in this.entities) {
                 // console.log(i)
@@ -123,47 +133,22 @@ export class KnockOut extends Scene {
             }
         });
         this.new_line();
-        this.key_triggered_button("End turn", ["c"], () => {
-            if (this.begin_game) {
-                UI.switch_player();
-                if (this.view === 2) {
-                    // pass
-                } else if (UI.player === 0) {
-                    this.cameras[0].LeftPerspective();
-                    this.player1_turn = false;
-                } else if (UI.player === 1) {
-                    this.turn_animation.start();
-                    this.cameras[0].RightPerspective();
-                    this.player2_turn = false;
-                }
-            }
-        });
+        this.new_line();
 
-        this.key_triggered_button("Next round", ["n"], () => {
-            // key is disabled during the round
-            if (!this.begin_game) {
-                this.turn_animation.start();
-                this.begin_game = true;
-                this.view = 1;
-            }
+        this.live_string(box => box.textContent = "Camera controls");
+        this.new_line();
+        // this.key_triggered_button("Change Perspective", ["v"], function () {
+        //     this.view += 1;
+        //     this.view %= 3;
+        // });
+        this.key_triggered_button("Reset Camera", ["r"], function () {
+            this.cameras[0].reset();
         });
 
         this.new_line();
         this.new_line();
-        this.live_string(box => box.textContent = "Animation Debug");
-        this.new_line();
-        this.key_triggered_button("Game start", [], () => {
-            this.game_animation.start();
-        });
-        this.key_triggered_button("Game stop", [], () => {
-            this.game_animation.end();
-        });
-        this.new_line();
-        this.key_triggered_button("Turn start", [], () => {
-            this.turn_animation.start();
-        });
-        this.key_triggered_button("Turn stop", [], () => {
-            this.turn_animation.end();
+        this.live_string(box => {
+            box.textContent = `Frame rate: ${this.frame_rate.toFixed(2)}`;
         });
     }
 
@@ -247,8 +232,8 @@ export class KnockOut extends Scene {
         if (!this.mouse_picking_p1 || !this.mouse_picking_p2) {
             const canvas = document.querySelector("#knockout-canvas");
             if (canvas) {
-                this.mouse_picking_p1 = new MousePicking(canvas, this.player1_chips, hex_color("#ff556f"));
-                this.mouse_picking_p2 = new MousePicking(canvas, this.player2_chips, hex_color("#5aa6ff"));
+                this.mouse_picking_p1 = new MousePicking(canvas, this.player1_chips, hex_color("#ff314f"));
+                this.mouse_picking_p2 = new MousePicking(canvas, this.player2_chips, hex_color("#3894fe"));
             }
         }
 
@@ -283,6 +268,7 @@ export class KnockOut extends Scene {
             this.initialized = true;
             program_state.projection_transform = Mat4.perspective(Math.PI / 4, context.width / context.height, 1, 10000);
         }
+
         // Setup projection matrix
         if (!this.orthographic) {
             var desired = Mat4.perspective(
@@ -340,8 +326,8 @@ export class KnockOut extends Scene {
 
         // game starts, update chips information
         // collect forces
-        if (this.start) {
-            this.start = !this.start;
+        if (this.start_simulate) {
+            this.start_simulate = !this.start_simulate;
             for (const i in this.player1_chips) {
                 if (this.mouse_picking_p1.forces[i][1] !== null) {
                     this.player1_chips[i].velocity = this.mouse_picking_p1.forces[i][1];
@@ -360,10 +346,6 @@ export class KnockOut extends Scene {
         for (const i in this.entities) {
             this.entities[i].draw(context, program_state);
         }
-        // this.obs[0].draw(context, program_state);
-        // this.obs[1].draw(context, program_state);
-        // this.obs[2].draw(context, program_state);
-        // this.obs[3].draw(context, program_state);
 
         // Draw chips
         for (const chip of this.player1_chips) {
@@ -424,15 +406,25 @@ export class KnockOut extends Scene {
             }
         }
 
+        // Automatically go to next turn after simulation is done
+        if (this.simulating && !this.are_chips_moving) {
+            this.simulating = false;
+            setTimeout((() => {
+                this.turn_animation.start();
+                this.begin_game = true;
+                this.view = 1;
+            }).bind(this), 500);
+        }
+
         // If both players finished their turn, do this
         if (!this.player1_turn && !this.player2_turn) {
-            this.start = true;
+            this.start_simulate = true;
+            this.simulating = true;
             this.begin_game = false;
             this.player1_turn = true;
             this.player2_turn = true;
+            this.view = 2;
         }
-        // this.game.play();
-        // this.ui.set_player_remain(0, 1);
 
         // Update and draw all ui
         UI.update_camera(program_state.camera_inverse);  // Only need to update camera once

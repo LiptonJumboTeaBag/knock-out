@@ -162,8 +162,9 @@ export class MousePicking {
                 this.selected_chip = null;
                 selected.selected = false;
             } else {
-                if (this.selected_chip)
+                if (this.selected_chip) {
                     this.selected_chip.selected = false;
+                }
                 this.selected_chip = selected;
                 selected.selected = true;
             }
