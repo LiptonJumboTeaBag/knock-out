@@ -377,10 +377,12 @@ export class KnockOut extends Scene {
             this.obs[1].draw(context, program_state);
             this.obs[2].draw(context, program_state);
             this.obs[3].draw(context, program_state);
-            CylinderBoxCollision(this.player1_chips[0].collider, this.obs[0].collider, true, context, program_state);
-            CylinderBoxCollision(this.player1_chips[0].collider, this.obs[1].collider, true, context, program_state);
-            CylinderBoxCollision(this.player1_chips[0].collider, this.obs[2].collider, true, context, program_state);
-            CylinderBoxCollision(this.player1_chips[0].collider, this.obs[3].collider, true, context, program_state);
+            if (this.player1_chips[0]) {
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[0].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[1].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[2].collider, true, context, program_state);
+                CylinderBoxCollision(this.player1_chips[0].collider, this.obs[3].collider, true, context, program_state);
+            }
         }
 
         // if a chip is out of bounds, remove that chip from game
@@ -434,6 +436,7 @@ export class KnockOut extends Scene {
                 this.begin_game = false;
                 this.start_simulate = false;
                 this.simulating = false;
+                this.debug = false;
             }
         }
 
