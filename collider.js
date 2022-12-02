@@ -6,6 +6,7 @@ const {
 
 const cos = 1 / Math.sqrt(5);
 const sin = 2 / Math.sqrt(5);
+const threshold = 0.13;
 
 // Cylinder-Clyinder collision
 export function CylinderCylinderCollision(cylinder1, cylinder2) {
@@ -20,7 +21,7 @@ function SphereSphereCollision(sphere1, sphere2) {
     let distance = Math.sqrt(Math.pow(sphere1.x - sphere2.x, 2)
         + Math.pow(sphere1.y - sphere2.y, 2)
         + Math.pow(sphere1.z - sphere2.z, 2));
-    return distance <= sphere1.r + sphere2.r;
+    return distance <= sphere1.r + sphere2.r + threshold;
 }
 
 const shape = new defs.Cube();
@@ -54,7 +55,7 @@ export function CylinderBoxCollision(cylinder, box, debug = false, context = nul
         // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x0, 0.3, z0)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
         // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(box.x, 0.3, box.z)).times(Mat4.scale(0.2, .2, .2)), mat);
     }
-    return distance <= cylinder.r + 0.1;
+    return distance <= cylinder.r + threshold;
 }
 
 function BoxBoxCollision(box1, box2) {
