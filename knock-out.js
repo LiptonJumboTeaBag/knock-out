@@ -405,7 +405,10 @@ export class KnockOut extends Scene {
             }
 
             if (this.game_over) {
-                this.game_animation.start()
+                this.game_animation.start();
+                this.begin_game = false;
+                this.start_simulate = false;
+                this.simulating = false;
             }
         }
 
