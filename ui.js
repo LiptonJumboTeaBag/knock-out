@@ -220,15 +220,15 @@ export class PlayerAvatar extends UI {
         this.materials = {
             // Textures of player's chips
             p1_obj: new Material(new defs.Phong_Shader(), {
-                ambient: 0.6,
-                diffusivity: 0.6,
-                specularity: 0.5,
+                ambient: 0.5,
+                diffusivity: 0.8,
+                specularity: 0.15,
                 color: color(1, .1, .1, 1)
             }),
             p2_obj: new Material(new defs.Phong_Shader(), {
-                ambient: 0.6,
-                diffusivity: 0.6,
-                specularity: 0.5,
+                ambient: 0.5,
+                diffusivity: 0.8,
+                specularity: 0.15,
                 color: color(25 / 256, 109 / 256, 227 / 256, 1)
             }),
             // Background of label texts
@@ -296,10 +296,10 @@ export class PlayerAvatar extends UI {
 
         // Camera and lighting rotation.
         const rotate_r = 3.8;
-        let cam_x = UI.player === player ? rotate_r * -Math.sin(t * 2) : 0;
-        let cam_y = UI.player === player ? rotate_r * Math.cos(t * 2) : rotate_r;
-        let light_x = UI.player === player ? 6 * -Math.sin(t * 2) : 0;
-        let light_y = UI.player === player ? 6 * Math.cos(t * 2) : 6;
+        let cam_x = (this._enable_highlight && UI.player === player) ? rotate_r * -Math.sin(t * 2) : 0;
+        let cam_y = (this._enable_highlight && UI.player === player) ? rotate_r * Math.cos(t * 2) : rotate_r;
+        let light_x = (this._enable_highlight && UI.player === player) ? 6 * -Math.sin(t * 2) : 0;
+        let light_y = (this._enable_highlight && UI.player === player) ? 6 * Math.cos(t * 2) : 6;
         program_state.set_camera(Mat4.look_at(vec3(cam_x, 1, cam_y), vec3(0, 0, 0), vec3(0, 1, 0)));
         program_state.lights = [new Light(vec4(light_x, 1, light_y, 1), color(1, 1, 1, 1), 1000)];
 

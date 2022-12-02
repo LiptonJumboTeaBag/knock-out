@@ -10,13 +10,13 @@ const phong = new defs.Phong_Shader();
 
 const materials = {
     plastic: new Material(phong,
-        {ambient: .2, diffusivity: .8, specularity: .5, color:hex_color("#ffaf15") }), // hex_color("#6f432a")
+        {ambient: .2, diffusivity: .8, specularity: .5, color: hex_color("#ffaf15")}), // hex_color("#6f432a")
     metal: new Material(phong,
         {ambient: 1, diffusivity: .8, specularity: .8, color: color(.9, .5, .9, 1)}),
     table: new Material(phong,
         {ambient: 0.5, diffusivity: 0.8, specularity: .6, color: color(0.9, .9, .9, 1)}),
     chip: new Material(phong,
-        {ambient: 0.6, diffusivity: 0.6, specularity: 0.5, color: color(1, 1, 1, 1)}),
+        {ambient: 0.15, diffusivity: 0.8, specularity: 0.15, color: color(1, 1, 1, 1)}),
     skybox: new Material(phong,
         {ambient: 0.7, diffusivity: 0, specularity: 0, color: hex_color("#436cc1")}),
     thonk: new Material(new Textured_Phong(), {
@@ -26,27 +26,27 @@ const materials = {
     cloud: new Material(new Textured_Phong(), {
         ambient: 1, diffusivity: 0.1, specularity: 0.1,
         // picture from https://opengameart.org/node/11731
-        texture: new Texture("assets/bluecloud_up.jpg", "LINEAR_MIPMAP_LINEAR"),color: color(0,0,0,1)
+        texture: new Texture("assets/bluecloud_up.jpg", "LINEAR_MIPMAP_LINEAR"), color: color(0, 0, 0, 1)
     }),
     wood: new Material(new Textured_Phong(), {
-        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        ambient: 0.5, diffusivity: 0.8, specularity: 0.1,
         // https://opengameart.org/node/8721
-        texture: new Texture("assets/wood4.png", "LINEAR_MIPMAP_LINEAR"), color: color(0,0,0,1)
+        texture: new Texture("assets/wood4.png", "LINEAR_MIPMAP_LINEAR"), color: color(0, 0, 0, 1)
     }),
     woodtiles: new Material(new Textured_Phong(), {
-        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        ambient: 0.6, diffusivity: 0.8, specularity: 0.1,
         // https://opengameart.org/content/handpainted-wood
-        texture: new Texture("assets/woodtiles.png", "LINEAR_MIPMAP_LINEAR"), color: color(0,0,0,1)
+        texture: new Texture("assets/woodtiles.png", "LINEAR_MIPMAP_LINEAR"), color: color(0, 0, 0, 1)
     }),
     woodfloor: new Material(new Textured_Phong(), {
-        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        ambient: 0.3, diffusivity: 0.8, specularity: 0.1,
         // https://www.pinterest.com/pin/331788697538463479/
-        texture: new Texture("assets/woodfloor.jpg", "LINEAR_MIPMAP_LINEAR"), color: color(0.1,0.05,0,1)
+        texture: new Texture("assets/woodfloor.jpg", "LINEAR_MIPMAP_LINEAR"), color: color(0.1, 0.05, 0, 1)
     }),
     pooltable: new Material(new Textured_Phong(), {
-        ambient: 1, diffusivity: 0.1, specularity: 0.1,
+        ambient: 0.5, diffusivity: 0.4, specularity: 0.2,
         // https://www.reddit.com/r/blender/comments/4kqybq/my_latest_render_pool_table_scene_thoughts/
-        texture: new Texture("assets/pooltable.jpg", "LINEAR_MIPMAP_LINEAR"), color: color(0.1,0.05,0,1)
+        texture: new Texture("assets/pooltable.jpg", "LINEAR_MIPMAP_LINEAR"), color: color(0.1, 0.05, 0, 1)
     }),
     water: new Material(new Textured_Phong(), {
         ambient: 1, diffusivity: 0.1, specularity: 0.1,
@@ -300,7 +300,7 @@ export class obbox extends Entity {
 export class Table extends Entity {
     // place table at origin with scale_x, scale_y, scale_z with the specified materal\
     // the default shape is a cube
-    constructor(material = materials.table, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5){
+    constructor(material = materials.wood, shape = shapes.rectangle, scale_x = 3, scale_y = 0.5, scale_z = 5) {
         super();
         this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.material = material;
@@ -339,27 +339,28 @@ export class Table extends Entity {
                 this.material = materials.water;
                 break;
             case 0:
-                this.material = materials.table;
+                // this.material = materials.table;
+                this.material = materials.wood;
                 break;
         }
     }
     reset_texture() {
         this.textureNum = 0;
-        this.material = materials.table;
+        // this.material = materials.table;
+        this.material = materials.wood;
     }
 }
 
 export class Obstacle extends Entity {
-    constructor(config=null, material = materials.plastic, shape = shapes.triangular_prism, scale_x = 2, scale_z = 1/2, scale_y = 1/4){
+    constructor(config = null, material = materials.woodfloor, shape = shapes.triangular_prism, scale_x = 2, scale_z = 1 / 2, scale_y = 1 / 4) {
         super();
         this.material = material;
         this.shape = shape;
         this.scale = Mat4.scale(scale_x, scale_y, scale_z)
         this.position = this.position.times(Mat4.translation(0, scale_y, 0));
-        if (config == 'left'){
+        if (config == 'left') {
             this.left();
-        }
-        else if (config == 'right'){
+        } else if (config == 'right') {
             this.right();
         }
 
@@ -392,16 +393,17 @@ export class Obstacle extends Entity {
         this.textureNum %= 2;
         switch (this.textureNum) {
             case 1:
-                this.material = materials.woodfloor;
+                this.material = materials.plastic;
                 break;
             case 0:
-                this.material = materials.plastic;
+                this.material = materials.woodfloor;
                 break;
         }
     }
     reset_texture() {
         this.textureNum = 0;
-        this.material = materials.plastic;
+        // this.material = materials.plastic;
+        this.material = materials.woodfloor;
     }
 
 }

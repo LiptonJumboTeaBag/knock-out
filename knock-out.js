@@ -353,10 +353,10 @@ export class KnockOut extends Scene {
         for (const i in this.entities) {
             this.entities[i].draw(context, program_state);
         }
-        this.obs[0].draw(context, program_state);
-        this.obs[1].draw(context, program_state);
-        this.obs[2].draw(context, program_state);
-        this.obs[3].draw(context, program_state);
+        // this.obs[0].draw(context, program_state);
+        // this.obs[1].draw(context, program_state);
+        // this.obs[2].draw(context, program_state);
+        // this.obs[3].draw(context, program_state);
 
         // Draw chips
         for (const chip of this.player1_chips) {
