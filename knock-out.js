@@ -140,13 +140,13 @@ export class KnockOut extends Scene {
         });
 
         this.key_triggered_button("Next round", ["n"], () => {
-            this.turn_animation.start();
-            this.begin_game = true;
-            this.view = 1;
+            // key is disabled during the round
+            if (!this.begin_game) {
+                this.turn_animation.start();
+                this.begin_game = true;
+                this.view = 1;
+            }
         });
-        // this.key_triggered_button("Move chips", ["m"], function () {
-        //     this.start = true;
-        // });
 
         this.new_line();
         this.new_line();
@@ -331,6 +331,13 @@ export class KnockOut extends Scene {
             this.mouse_picking_p2.disable_mouse_picking();
         }
 
+        // disable player avatar highlight if it is not any player's turn
+        if (!this.begin_game) {
+            this.ui[1].disable_highlight();
+        } else {
+            this.ui[1].enable_highlight();
+        }
+
         // game starts, update chips information
         // collect forces
         if (this.start) {
@@ -367,7 +374,10 @@ export class KnockOut extends Scene {
         }
 
         // if a chip is out of bounds, remove that chip from game
+        // we can do a concurrent check for velocity to help with the winning decision later
+        this.are_chips_moving = 0;
         for (const i in this.player1_chips) {
+            this.are_chips_moving = this.are_chips_moving || this.player1_chips[i].velocity[0] || this.player1_chips[i].velocity[1];
             if (this.player1_chips[i].collider.x > 3 || this.player1_chips[i].collider.x < -3) {
                 console.log("out of bounds");
                 this.player1_chips.splice(i, 1);
@@ -380,6 +390,7 @@ export class KnockOut extends Scene {
         }
         this.ui[0].set_player_remain(0, this.chip1_count);
         for (const i in this.player2_chips) {
+            this.are_chips_moving = this.are_chips_moving || this.player2_chips[i].velocity[0] || this.player2_chips[i].velocity[1]
             if (this.player2_chips[i].collider.x > 3 || this.player2_chips[i].collider.x < -3) {
                 console.log("out of bounds");
                 this.player2_chips.splice(i, 1);
@@ -392,54 +403,7 @@ export class KnockOut extends Scene {
         }
         this.ui[0].set_player_remain(1, this.chip2_count);
 
-        if (!this.game_over) {
-            let result = this.game.knockout(this.chip1_count, this.chip2_count);
-            if (result === 0) {
-                // console.log("1 wins");
-                this.game_animation.set_winner(0);
-                this.game_over = true;
-            } else if (result === 1) {
-                // console.log("2 wins");
-                this.game_animation.set_winner(1);
-                this.game_over = true;
-            } else if (result === 2) {
-                // console.log("draw");
-                this.game_animation.set_winner(2);
-                this.game_over = true;
-            }
-
-            if (this.game_over) {
-                this.game_animation.start()
-            }
-        }
-
-        // if a chip is out of bounds, remove that chip from game
-        for (const i in this.player1_chips) {
-            if (this.player1_chips[i].collider.x > 3 || this.player1_chips[i].collider.x < -3) {
-                console.log("out of bounds");
-                this.player1_chips.splice(i, 1);
-                this.chip1_count -= 1;
-            } else if (this.player1_chips[i].collider.z > 5 || this.player1_chips[i].collider.z < -5) {
-                console.log("out of bounds");
-                this.player1_chips.splice(i, 1);
-                this.chip1_count -= 1;
-            }
-        }
-        this.ui[0].set_player_remain(0, this.chip1_count);
-        for (const i in this.player2_chips) {
-            if (this.player2_chips[i].collider.x > 3 || this.player2_chips[i].collider.x < -3) {
-                console.log("out of bounds");
-                this.player2_chips.splice(i, 1);
-                this.chip2_count -= 1;
-            } else if (this.player2_chips[i].collider.z > 5 || this.player2_chips[i].collider.z < -5) {
-                console.log("out of bounds");
-                this.player2_chips.splice(i, 1);
-                this.chip2_count -= 1;
-            }
-        }
-        this.ui[0].set_player_remain(1, this.chip2_count);
-
-        if (!this.game_over) {
+        if (!this.game_over && !this.are_chips_moving) {
             let result = this.game.knockout(this.chip1_count, this.chip2_count);
             if (result === 0) {
                 // console.log("1 wins");

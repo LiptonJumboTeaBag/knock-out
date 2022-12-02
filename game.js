@@ -9,37 +9,7 @@ const {
  * Game object that manages all game logic and events.
  */
 export class Game {
-    constructor() {
-        // super();
-        // keeping track of which player's turn it is, player1 goes first
-        this.player1_turn = true;
-        this.player2_turn = false;
-        // keeping track of current round
-        this.curr_round = 1;
-
-        // starting number of chips
-        this.numChips1 = 3; // we can decide how many chips to start with
-        this.numChips2 = 3;
-
-
-    }
-
-    // USAGE: use this function twice in each round
-    //          first usage triggers player1's turn
-    //          second usage triggers player2's turn and immediately plays animation once player2's turn is over
-    // just kidding animation plays once m is pressed
-    play() {
-        if (this.player1_turn) {
-            // player1's turn and change perspective
-            console.log('p1');
-        } else if (this.player2_turn) {
-            // player2's turn and change perspective
-            // game animation
-            console.log('p2');
-        }
-
-        this.isPlayer1 = !this.isPlayer1;
-    }
+    constructor() {}
 
     // USAGE: this function should be used once after the total number of chips knocked out on both sides is known when the current round ends
     //          it allows for us to consider to possibility of a tie
