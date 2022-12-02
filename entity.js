@@ -283,6 +283,7 @@ export class obbox extends Entity {
         this.material = material;
         this.position = this.position.times(Mat4.translation(x, +scale_y, z));
         this.rotation = Mat4.rotation(angle, 0, 1, 0);
+        this.angle = angle;
         this.shape = shape;
         this.norm = norm;
     }
