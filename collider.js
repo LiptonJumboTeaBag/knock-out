@@ -4,9 +4,7 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene,
 } = tiny;
 
-const cos = 1 / Math.sqrt(5);
-const sin = 2 / Math.sqrt(5);
-const threshold = 0.13;
+const threshold = 0.05;
 
 // Cylinder-Clyinder collision
 export function CylinderCylinderCollision(cylinder1, cylinder2) {
@@ -34,7 +32,10 @@ const mat = new Material(new defs.Phong_Shader(), {
 
 export function CylinderBoxCollision(cylinder, box, debug = false, context = null, ps = null) {
     let w = box.w;
-    let d = 0.0000001
+    let d = 0.0000001;
+
+    const cos = Math.cos(box.entity.angle);
+    const sin = Math.sin(box.entity.angle);
 
     let x1 = box.x + w * cos + d * sin, x2 = box.x - w * cos - d * sin,
         z1 = box.z - w * sin + d * cos, z2 = box.z + w * sin - d * cos,
@@ -48,12 +49,9 @@ export function CylinderBoxCollision(cylinder, box, debug = false, context = nul
     if (debug) {
         // console.log("x: " + x + " z: " + z + "; cylinder x: " + cylinder.x + " cylinder z: " + cylinder.z);
         // console.log("minX: " + minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ);
-        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x1, 0.3, z1)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
-        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x2, 0.3, z2)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
-        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x4, 0.3, maxZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
-        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x3, 0.3, minZ)).times(Mat4.scale(0.1, 0.1, 0.1)), mat);
+        shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x1, 0.3, z1)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
+        shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x2, 0.3, z2)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
         // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(x0, 0.3, z0)).times(Mat4.scale(0.2, 0.2, 0.2)), mat);
-        // shape.draw(context, ps, Mat4.identity().times(Mat4.translation(box.x, 0.3, box.z)).times(Mat4.scale(0.2, .2, .2)), mat);
     }
     return distance <= cylinder.r + threshold;
 }
