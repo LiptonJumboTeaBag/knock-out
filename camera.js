@@ -17,6 +17,7 @@ export class Camera {
         this.pace = 30;
     }
 
+    // resets the camera matrix based on the current view
     reset(){
         console.log(this.current_view)
         if (this.current_view === "Left"){
@@ -39,6 +40,7 @@ export class Camera {
         }
     }
 
+    // transition to the current view from previous view in this.pace ticks using rotations
     update() {
         if (this.previous_view === "Left"){
             if (this.current_view === "Right"){
@@ -61,13 +63,6 @@ export class Camera {
             }
         }
         else if (this.previous_view === "Right"){
-            // if (this.current_view === "Left"){
-            //     if (this.ticks < this.pace)
-            //         this.camera_matrix = this.camera_matrix.times(Mat4.rotation(-Math.PI/this.pace, 0, 1, 0));
-            //     else
-            //         this.previous_view = "Left";
-            // }
-            // else 
             if (this.current_view === "birdEye"){
                 if (this.ticks < this.pace/2){
                     this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.PI/this.pace, 0, 1, 0));
@@ -91,16 +86,6 @@ export class Camera {
                 else
                     this.previous_view = "Left";
             }
-            else if (this.current_view === "Right"){
-                if (this.ticks < this.pace/2){
-                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.atan(9/10)/this.pace*2, 0, 0, 1));
-                }
-                else if (this.ticks < this.pace){
-                    this.camera_matrix = this.camera_matrix.times(Mat4.rotation(Math.PI/this.pace, 0, 1, 0));
-                }
-                else
-                    this.previous_view = "Right";
-            }
         }
         this.ticks ++;
         // console.log(this.previous_view, this.current_view)
@@ -110,15 +95,15 @@ export class Camera {
         this.pace = pace;
     }
 
-    // places camera at (0, y_pos, 0) looking at the origin, the top_vec is vec3 top vector
+    // sets the goal view to birdEye
     birdEye(){
-        //this.camera_matrix = Mat4.look_at(vec3(0, y_pos, 0), vec3(0,0,0), top_vec)
-        //    .times(Mat4.scale(1, 1, 1));
+        //this.camera_matrix = Mat4.look_at(vec3(0, Math.sqrt(181), 0), vec3(0,0,0), vec3(-1,0,0))
         this.previous_view = this.current_view;
         this.current_view = "birdEye";
         this.ticks = 0;
     }
 
+    // sets the goal view to Left (P1)
     LeftPerspective(){
         // this.camera_matrix = Mat4.look_at(vec3(0, 10, 9), vec3(0,0,0), vec3(0,1,0));
         this.previous_view = this.current_view;
@@ -126,6 +111,7 @@ export class Camera {
         this.ticks = 0;
     }
 
+    // sets the goal view to Right (P2)
     RightPerspective(){
         // this.camera_matrix = Mat4.look_at(vec3(0, 10, -9), vec3(0,0,0), vec3(0,1,0));
         this.previous_view = this.current_view;

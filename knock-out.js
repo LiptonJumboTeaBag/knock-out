@@ -146,7 +146,7 @@ export class KnockOut extends Scene {
         //     this.view += 1;
         //     this.view %= 3;
         // });
-        this.key_triggered_button("Reset Camera", ["r"], function () {
+        this.key_triggered_button("Reset Camera", ["x"], function () {
             this.cameras[0].reset();
         });
 
@@ -158,7 +158,7 @@ export class KnockOut extends Scene {
         //     this.view += 1;
         //     this.view %= 3;
         // });
-        this.key_triggered_button("Toggle Colliders", ["r"], function () {
+        this.key_triggered_button("Toggle Colliders", ["b"], function () {
             this.debug = !this.debug;
         });
 
