@@ -320,11 +320,7 @@ export class Table extends Entity {
 
     draw(context, program_state) {
         this.shape.arrays.texture_coord.forEach(
-            // (v, i, l) => l[i] = vec(5*v[1], 3*v[0])
-            // (v, i, l) => l[i] = vec(v[0], 2*v[1])
-            // (v, i, l) => l[i] = vec(v[1], v[0])
-             (v, i, l) => l[i] = vec(v[0], v[1])
-            // (v, i, l) => l[i] = vec(3/2*v[0], 3/2*v[1])
+            (v, i, l) => l[i] = vec(v[0], v[1])
         )
         const model_transform = this.position.times(this.rotation).times(this.scale);
         this.shape.draw(context, program_state, model_transform, this.material);
@@ -340,14 +336,12 @@ export class Table extends Entity {
                 this.material = materials.water;
                 break;
             case 0:
-                // this.material = materials.table;
                 this.material = materials.wood;
                 break;
         }
     }
     reset_texture() {
         this.textureNum = 0;
-        // this.material = materials.table;
         this.material = materials.wood;
     }
 }
@@ -403,7 +397,6 @@ export class Obstacle extends Entity {
     }
     reset_texture() {
         this.textureNum = 0;
-        // this.material = materials.plastic;
         this.material = materials.woodfloor;
     }
 

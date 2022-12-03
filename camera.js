@@ -88,7 +88,6 @@ export class Camera {
             }
         }
         this.ticks ++;
-        // console.log(this.previous_view, this.current_view)
     }
 
     setPace(pace){

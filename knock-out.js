@@ -254,7 +254,7 @@ export class KnockOut extends Scene {
             }
         }
 
-        // Switch camera view
+        // Switch camera view based on this.view
         if (this.view !== this.currentView) {
             switch (this.view) {
                 case 0:
@@ -274,7 +274,6 @@ export class KnockOut extends Scene {
 
         this.cameras[0].update();
         program_state.set_camera(this.cameras[0].camera_matrix);
-        //program_state.set_camera(desired.map((x,i) => i==0? Vector.from(program_state.camera_inverse[i]).mix(x, 0.1):desired[i]));
 
         // Calculate time
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
@@ -372,6 +371,7 @@ export class KnockOut extends Scene {
             chip.draw(context, program_state);
         }
 
+        // draw colliders
         if (this.debug) {
             this.obs[0].draw(context, program_state);
             this.obs[1].draw(context, program_state);
