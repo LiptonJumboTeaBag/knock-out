@@ -105,7 +105,7 @@ export class KnockOut extends Scene {
                 this.ticks = 0;
             }
         });
-        this.key_triggered_button("Toggle Orthographic View", ["0"], function () {
+        this.key_triggered_button("Toggle Orthographic View", ["v"], function () {
             this.orthographic = !this.orthographic;
         });
         this.new_line();
