@@ -1,12 +1,4 @@
 import {defs, tiny} from './tiny-graphics/common.js';
-import {Axes_Viewer, Axes_Viewer_Test_Scene} from "./tiny-graphics/axes-viewer.js"
-import {Collision_Demo, Inertia_Demo} from "./tiny-graphics/collisions-demo.js"
-import {Many_Lights_Demo} from "./tiny-graphics/many-lights-demo.js"
-import {Obj_File_Demo} from "./tiny-graphics/obj-file-demo.js"
-import {Scene_To_Texture_Demo} from "./tiny-graphics/scene-to-texture-demo.js"
-import {Surfaces_Demo} from "./tiny-graphics/surfaces-demo.js"
-import {Text_Demo} from "./tiny-graphics/text-demo.js"
-import {Transforms_Sandbox} from "./tiny-graphics/transforms-sandbox.js"
 import {KnockOut} from "./knock-out.js";
 
 // Pull these names into this module's scope for convenience:
@@ -26,14 +18,6 @@ const {
 const Minimal_Webgl_Demo = defs.Minimal_Webgl_Demo;
 
 Object.assign(defs,
-    {Axes_Viewer, Axes_Viewer_Test_Scene},
-    {Inertia_Demo, Collision_Demo},
-    {Many_Lights_Demo},
-    {Obj_File_Demo},
-    {Scene_To_Texture_Demo},
-    {Surfaces_Demo},
-    {Text_Demo},
-    {Transforms_Sandbox},
     {KnockOut}
 );
 
